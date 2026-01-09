@@ -1,0 +1,306 @@
+[
+  {
+    "id": "prop_001",
+    "category": "properties",
+    "difficulty": "easy",
+    "query": "What is the molecular weight of CHEMBL25?",
+    "expected": {
+      "intent_type": "property_query",
+      "success": true,
+      "property": "molecular_weight",
+      "compound": "CHEMBL25",
+      "should_contain": ["180"]
+    },
+    "metadata": {
+      "steps_expected": 2,
+      "cache_eligible": true
+    }
+  },
+  {
+    "id": "prop_002",
+    "category": "properties",
+    "difficulty": "easy",
+    "query": "Get LogP for aspirin",
+    "expected": {
+      "intent_type": "property_query",
+      "success": true,
+      "property": "logp",
+      "compound": "aspirin"
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "prop_003",
+    "category": "properties",
+    "difficulty": "medium",
+    "query": "What are the physicochemical properties of ibuprofen?",
+    "expected": {
+      "intent_type": "property_query",
+      "success": true,
+      "compound": "ibuprofen",
+      "should_contain": ["molecular_weight", "logp"]
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "prop_004",
+    "category": "properties",
+    "difficulty": "medium",
+    "query": "Calculate molecular descriptors for CHEMBL1",
+    "expected": {
+      "intent_type": "property_query",
+      "success": true,
+      "compound": "CHEMBL1",
+      "should_contain": ["descriptor"]
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "prop_005",
+    "category": "properties",
+    "difficulty": "easy",
+    "query": "What's the SMILES for caffeine?",
+    "expected": {
+      "intent_type": "property_query",
+      "success": true,
+      "property": "smiles",
+      "compound": "caffeine"
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "prop_006",
+    "category": "properties",
+    "difficulty": "hard",
+    "query": "Compare molecular weight of aspirin and ibuprofen",
+    "expected": {
+      "intent_type": "property_comparison",
+      "success": true,
+      "compounds": ["aspirin", "ibuprofen"],
+      "property": "molecular_weight"
+    },
+    "metadata": {
+      "steps_expected": 3,
+      "parallel_eligible": true
+    }
+  },
+  {
+    "id": "prop_007",
+    "category": "properties",
+    "difficulty": "medium",
+    "query": "Get InChI for CHEMBL25",
+    "expected": {
+      "intent_type": "property_query",
+      "success": true,
+      "property": "inchi",
+      "compound": "CHEMBL25"
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "prop_008",
+    "category": "properties",
+    "difficulty": "medium",
+    "query": "What is the solubility of paracetamol?",
+    "expected": {
+      "intent_type": "property_query",
+      "success": true,
+      "property": "solubility",
+      "compound": "paracetamol"
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "prop_009",
+    "category": "properties",
+    "difficulty": "easy",
+    "query": "Number of hydrogen bond donors in aspirin",
+    "expected": {
+      "intent_type": "property_query",
+      "success": true,
+      "property": "hbd",
+      "compound": "aspirin"
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "prop_010",
+    "category": "properties",
+    "difficulty": "easy",
+    "query": "Hydrogen bond acceptors in CHEMBL25",
+    "expected": {
+      "intent_type": "property_query",
+      "success": true,
+      "property": "hba",
+      "compound": "CHEMBL25"
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "prop_011",
+    "category": "properties",
+    "difficulty": "medium",
+    "query": "Polar surface area of warfarin",
+    "expected": {
+      "intent_type": "property_query",
+      "success": true,
+      "property": "psa",
+      "compound": "warfarin"
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "prop_012",
+    "category": "properties",
+    "difficulty": "hard",
+    "query": "Which has higher LogP: aspirin or ibuprofen?",
+    "expected": {
+      "intent_type": "property_comparison",
+      "success": true,
+      "compounds": ["aspirin", "ibuprofen"],
+      "property": "logp"
+    },
+    "metadata": {
+      "steps_expected": 3,
+      "parallel_eligible": true
+    }
+  },
+  {
+    "id": "prop_013",
+    "category": "properties",
+    "difficulty": "medium",
+    "query": "Calculate druglikeness for metformin",
+    "expected": {
+      "intent_type": "property_query",
+      "success": true,
+      "property": "druglikeness",
+      "compound": "metformin"
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "prop_014",
+    "category": "properties",
+    "difficulty": "easy",
+    "query": "Rotatable bonds in ibuprofen",
+    "expected": {
+      "intent_type": "property_query",
+      "success": true,
+      "property": "rotatable_bonds",
+      "compound": "ibuprofen"
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "prop_015",
+    "category": "properties",
+    "difficulty": "medium",
+    "query": "What is the canonical SMILES for CHEMBL1?",
+    "expected": {
+      "intent_type": "property_query",
+      "success": true,
+      "property": "canonical_smiles",
+      "compound": "CHEMBL1"
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "prop_016",
+    "category": "properties",
+    "difficulty": "hard",
+    "query": "Compare all properties of aspirin and paracetamol",
+    "expected": {
+      "intent_type": "property_comparison",
+      "success": true,
+      "compounds": ["aspirin", "paracetamol"]
+    },
+    "metadata": {
+      "steps_expected": 3,
+      "parallel_eligible": true
+    }
+  },
+  {
+    "id": "prop_017",
+    "category": "properties",
+    "difficulty": "medium",
+    "query": "Aromatic rings in caffeine",
+    "expected": {
+      "intent_type": "property_query",
+      "success": true,
+      "property": "aromatic_rings",
+      "compound": "caffeine"
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "prop_018",
+    "category": "properties",
+    "difficulty": "medium",
+    "query": "Get Lipinski rule violations for warfarin",
+    "expected": {
+      "intent_type": "property_query",
+      "success": true,
+      "property": "lipinski",
+      "compound": "warfarin"
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "prop_019",
+    "category": "properties",
+    "difficulty": "easy",
+    "query": "Heavy atom count in aspirin",
+    "expected": {
+      "intent_type": "property_query",
+      "success": true,
+      "property": "heavy_atoms",
+      "compound": "aspirin"
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "prop_020",
+    "category": "properties",
+    "difficulty": "hard",
+    "query": "Get full molecular profile for CHEMBL25 including all descriptors",
+    "expected": {
+      "intent_type": "property_query",
+      "success": true,
+      "compound": "CHEMBL25",
+      "should_contain": ["molecular_weight", "logp", "descriptors"]
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  }
+]

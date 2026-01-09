@@ -1,0 +1,234 @@
+[
+  {
+    "id": "target_001",
+    "category": "targets",
+    "difficulty": "medium",
+    "query": "What targets does aspirin bind to?",
+    "expected": {
+      "intent_type": "target_query",
+      "success": true,
+      "compound": "aspirin",
+      "should_return_list": true,
+      "should_contain": ["COX"]
+    },
+    "metadata": {
+      "steps_expected": 2,
+      "cache_eligible": true
+    }
+  },
+  {
+    "id": "target_002",
+    "category": "targets",
+    "difficulty": "medium",
+    "query": "Find targets for CHEMBL25",
+    "expected": {
+      "intent_type": "target_query",
+      "success": true,
+      "compound": "CHEMBL25",
+      "should_return_list": true
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "target_003",
+    "category": "targets",
+    "difficulty": "hard",
+    "query": "Get all protein targets of ibuprofen with activity < 100nM",
+    "expected": {
+      "intent_type": "target_query",
+      "success": true,
+      "compound": "ibuprofen",
+      "activity_threshold": 100,
+      "should_return_list": true
+    },
+    "metadata": {
+      "steps_expected": 3
+    }
+  },
+  {
+    "id": "target_004",
+    "category": "targets",
+    "difficulty": "medium",
+    "query": "What proteins does metformin target?",
+    "expected": {
+      "intent_type": "target_query",
+      "success": true,
+      "compound": "metformin",
+      "should_return_list": true
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "target_005",
+    "category": "targets",
+    "difficulty": "medium",
+    "query": "Biological targets of caffeine",
+    "expected": {
+      "intent_type": "target_query",
+      "success": true,
+      "compound": "caffeine",
+      "should_return_list": true
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "target_006",
+    "category": "targets",
+    "difficulty": "hard",
+    "query": "Find compounds that bind to COX-2",
+    "expected": {
+      "intent_type": "reverse_target_query",
+      "success": true,
+      "target": "COX-2",
+      "should_return_list": true
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "target_007",
+    "category": "targets",
+    "difficulty": "medium",
+    "query": "Get target information for warfarin",
+    "expected": {
+      "intent_type": "target_query",
+      "success": true,
+      "compound": "warfarin",
+      "should_return_list": true
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "target_008",
+    "category": "targets",
+    "difficulty": "hard",
+    "query": "Which targets are shared between aspirin and ibuprofen?",
+    "expected": {
+      "intent_type": "target_comparison",
+      "success": true,
+      "compounds": ["aspirin", "ibuprofen"],
+      "should_return_list": true
+    },
+    "metadata": {
+      "steps_expected": 3,
+      "parallel_eligible": true
+    }
+  },
+  {
+    "id": "target_009",
+    "category": "targets",
+    "difficulty": "medium",
+    "query": "Target profile of CHEMBL1",
+    "expected": {
+      "intent_type": "target_query",
+      "success": true,
+      "compound": "CHEMBL1",
+      "should_return_list": true
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "target_010",
+    "category": "targets",
+    "difficulty": "hard",
+    "query": "Find all kinase inhibitors similar to CHEMBL1",
+    "expected": {
+      "intent_type": "target_similarity",
+      "success": true,
+      "compound": "CHEMBL1",
+      "target_class": "kinase",
+      "should_return_list": true
+    },
+    "metadata": {
+      "steps_expected": 3
+    }
+  },
+  {
+    "id": "target_011",
+    "category": "targets",
+    "difficulty": "medium",
+    "query": "What are the binding affinities of paracetamol?",
+    "expected": {
+      "intent_type": "target_query",
+      "success": true,
+      "compound": "paracetamol",
+      "should_return_list": true
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "target_012",
+    "category": "targets",
+    "difficulty": "hard",
+    "query": "List drugs targeting EGFR with IC50 < 50nM",
+    "expected": {
+      "intent_type": "reverse_target_query",
+      "success": true,
+      "target": "EGFR",
+      "activity_threshold": 50,
+      "should_return_list": true
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "target_013",
+    "category": "targets",
+    "difficulty": "medium",
+    "query": "Mechanism of action for aspirin",
+    "expected": {
+      "intent_type": "target_query",
+      "success": true,
+      "compound": "aspirin",
+      "should_contain": ["COX", "mechanism"]
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "target_014",
+    "category": "targets",
+    "difficulty": "hard",
+    "query": "Compare target profiles of warfarin and aspirin",
+    "expected": {
+      "intent_type": "target_comparison",
+      "success": true,
+      "compounds": ["warfarin", "aspirin"],
+      "should_return_list": true
+    },
+    "metadata": {
+      "steps_expected": 3,
+      "parallel_eligible": true
+    }
+  },
+  {
+    "id": "target_015",
+    "category": "targets",
+    "difficulty": "medium",
+    "query": "Find receptor interactions for CHEMBL100",
+    "expected": {
+      "intent_type": "target_query",
+      "success": true,
+      "compound": "CHEMBL100",
+      "should_return_list": true
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  }
+]

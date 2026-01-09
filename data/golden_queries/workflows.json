@@ -1,0 +1,294 @@
+[
+  {
+    "id": "workflow_001",
+    "category": "workflows",
+    "difficulty": "hard",
+    "query": "Find similar compounds to aspirin and get their targets",
+    "expected": {
+      "intent_type": "multi_step_workflow",
+      "success": true,
+      "steps": ["similarity_search", "target_query"],
+      "should_return_list": true
+    },
+    "metadata": {
+      "steps_expected": 3,
+      "parallel_eligible": false
+    }
+  },
+  {
+    "id": "workflow_002",
+    "category": "workflows",
+    "difficulty": "hard",
+    "query": "Get properties and targets for CHEMBL25",
+    "expected": {
+      "intent_type": "multi_step_workflow",
+      "success": true,
+      "steps": ["property_query", "target_query"],
+      "compound": "CHEMBL25"
+    },
+    "metadata": {
+      "steps_expected": 3,
+      "parallel_eligible": true
+    }
+  },
+  {
+    "id": "workflow_003",
+    "category": "workflows",
+    "difficulty": "very_hard",
+    "query": "Find compounds similar to ibuprofen, get their properties, and filter by MW < 300",
+    "expected": {
+      "intent_type": "multi_step_workflow",
+      "success": true,
+      "steps": ["similarity_search", "property_query", "filter"],
+      "filter_criteria": {"molecular_weight": {"max": 300}}
+    },
+    "metadata": {
+      "steps_expected": 4,
+      "parallel_eligible": true
+    }
+  },
+  {
+    "id": "workflow_004",
+    "category": "workflows",
+    "difficulty": "hard",
+    "query": "Look up caffeine and find its similar structures with their targets",
+    "expected": {
+      "intent_type": "multi_step_workflow",
+      "success": true,
+      "steps": ["compound_lookup", "similarity_search", "target_query"]
+    },
+    "metadata": {
+      "steps_expected": 4
+    }
+  },
+  {
+    "id": "workflow_005",
+    "category": "workflows",
+    "difficulty": "very_hard",
+    "query": "Compare properties of aspirin and ibuprofen, then find compounds similar to the one with higher LogP",
+    "expected": {
+      "intent_type": "multi_step_workflow",
+      "success": true,
+      "steps": ["property_comparison", "conditional_similarity"]
+    },
+    "metadata": {
+      "steps_expected": 4,
+      "parallel_eligible": false
+    }
+  },
+  {
+    "id": "workflow_006",
+    "category": "workflows",
+    "difficulty": "hard",
+    "query": "Get all targets for metformin and find other compounds binding to the same targets",
+    "expected": {
+      "intent_type": "multi_step_workflow",
+      "success": true,
+      "steps": ["target_query", "reverse_target_query"]
+    },
+    "metadata": {
+      "steps_expected": 3
+    }
+  },
+  {
+    "id": "workflow_007",
+    "category": "workflows",
+    "difficulty": "very_hard",
+    "query": "Find COX-2 inhibitors, calculate their druglikeness, and return top 5 by Lipinski compliance",
+    "expected": {
+      "intent_type": "multi_step_workflow",
+      "success": true,
+      "steps": ["reverse_target_query", "property_query", "rank"],
+      "limit": 5
+    },
+    "metadata": {
+      "steps_expected": 4
+    }
+  },
+  {
+    "id": "workflow_008",
+    "category": "workflows",
+    "difficulty": "hard",
+    "query": "Look up CHEMBL1, find its properties and similar compounds",
+    "expected": {
+      "intent_type": "multi_step_workflow",
+      "success": true,
+      "steps": ["compound_lookup", "property_query", "similarity_search"]
+    },
+    "metadata": {
+      "steps_expected": 3
+    }
+  },
+  {
+    "id": "workflow_009",
+    "category": "workflows",
+    "difficulty": "very_hard",
+    "query": "Find analogs of warfarin with similarity > 0.8, get their targets, and identify shared targets",
+    "expected": {
+      "intent_type": "multi_step_workflow",
+      "success": true,
+      "steps": ["similarity_search", "target_query", "intersection"]
+    },
+    "metadata": {
+      "steps_expected": 4
+    }
+  },
+  {
+    "id": "workflow_010",
+    "category": "workflows",
+    "difficulty": "hard",
+    "query": "Get molecular weight and LogP for paracetamol and its analogs",
+    "expected": {
+      "intent_type": "multi_step_workflow",
+      "success": true,
+      "steps": ["similarity_search", "property_query"]
+    },
+    "metadata": {
+      "steps_expected": 3,
+      "parallel_eligible": true
+    }
+  },
+  {
+    "id": "workflow_011",
+    "category": "workflows",
+    "difficulty": "very_hard",
+    "query": "Find compounds binding to EGFR, filter by IC50 < 100nM, get properties, and rank by druglikeness",
+    "expected": {
+      "intent_type": "multi_step_workflow",
+      "success": true,
+      "steps": ["reverse_target_query", "filter", "property_query", "rank"]
+    },
+    "metadata": {
+      "steps_expected": 5
+    }
+  },
+  {
+    "id": "workflow_012",
+    "category": "workflows",
+    "difficulty": "hard",
+    "query": "Compare targets of aspirin and ibuprofen, then find properties of shared targets' ligands",
+    "expected": {
+      "intent_type": "multi_step_workflow",
+      "success": true,
+      "steps": ["target_comparison", "reverse_target_query", "property_query"]
+    },
+    "metadata": {
+      "steps_expected": 4
+    }
+  },
+  {
+    "id": "workflow_013",
+    "category": "workflows",
+    "difficulty": "hard",
+    "query": "Look up CC(=O)OC1=CC=CC=C1C(=O)O and find similar structures with their properties",
+    "expected": {
+      "intent_type": "multi_step_workflow",
+      "success": true,
+      "steps": ["compound_lookup", "similarity_search", "property_query"]
+    },
+    "metadata": {
+      "steps_expected": 3
+    }
+  },
+  {
+    "id": "workflow_014",
+    "category": "workflows",
+    "difficulty": "very_hard",
+    "query": "Find kinase inhibitors similar to CHEMBL1, get their IC50 values, and identify the most potent",
+    "expected": {
+      "intent_type": "multi_step_workflow",
+      "success": true,
+      "steps": ["similarity_search", "target_query", "rank"]
+    },
+    "metadata": {
+      "steps_expected": 4
+    }
+  },
+  {
+    "id": "workflow_015",
+    "category": "workflows",
+    "difficulty": "hard",
+    "query": "Get all properties for caffeine and find compounds with similar property profiles",
+    "expected": {
+      "intent_type": "multi_step_workflow",
+      "success": true,
+      "steps": ["property_query", "property_similarity"]
+    },
+    "metadata": {
+      "steps_expected": 3
+    }
+  },
+  {
+    "id": "workflow_016",
+    "category": "workflows",
+    "difficulty": "very_hard",
+    "query": "Find NSAIDs, compare their COX-1/COX-2 selectivity, and get properties of the most selective",
+    "expected": {
+      "intent_type": "multi_step_workflow",
+      "success": true,
+      "steps": ["compound_search", "target_query", "comparison", "property_query"]
+    },
+    "metadata": {
+      "steps_expected": 5
+    }
+  },
+  {
+    "id": "workflow_017",
+    "category": "workflows",
+    "difficulty": "hard",
+    "query": "Look up CHEMBL100, find targets, and get other compounds binding those targets",
+    "expected": {
+      "intent_type": "multi_step_workflow",
+      "success": true,
+      "steps": ["compound_lookup", "target_query", "reverse_target_query"]
+    },
+    "metadata": {
+      "steps_expected": 3
+    }
+  },
+  {
+    "id": "workflow_018",
+    "category": "workflows",
+    "difficulty": "very_hard",
+    "query": "Find analogs of metformin with MW < 200, get their targets, and identify novel target interactions",
+    "expected": {
+      "intent_type": "multi_step_workflow",
+      "success": true,
+      "steps": ["similarity_search", "filter", "target_query", "comparison"]
+    },
+    "metadata": {
+      "steps_expected": 5
+    }
+  },
+  {
+    "id": "workflow_019",
+    "category": "workflows",
+    "difficulty": "hard",
+    "query": "Get properties and similarity neighbors for both aspirin and warfarin",
+    "expected": {
+      "intent_type": "multi_step_workflow",
+      "success": true,
+      "steps": ["property_query", "similarity_search"],
+      "compounds": ["aspirin", "warfarin"]
+    },
+    "metadata": {
+      "steps_expected": 4,
+      "parallel_eligible": true
+    }
+  },
+  {
+    "id": "workflow_020",
+    "category": "workflows",
+    "difficulty": "very_hard",
+    "query": "Find compounds similar to ibuprofen and aspirin, intersect results, get properties, rank by similarity",
+    "expected": {
+      "intent_type": "multi_step_workflow",
+      "success": true,
+      "steps": ["similarity_search", "intersection", "property_query", "rank"]
+    },
+    "metadata": {
+      "steps_expected": 5,
+      "parallel_eligible": true
+    }
+  }
+]

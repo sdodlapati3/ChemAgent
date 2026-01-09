@@ -1,0 +1,227 @@
+[
+  {
+    "id": "edge_001",
+    "category": "edge_cases",
+    "difficulty": "easy",
+    "query": "CHEMBL99999999999",
+    "expected": {
+      "intent_type": "compound_lookup",
+      "success": false,
+      "error_type": "not_found"
+    },
+    "metadata": {
+      "steps_expected": 1,
+      "should_handle_gracefully": true
+    }
+  },
+  {
+    "id": "edge_002",
+    "category": "edge_cases",
+    "difficulty": "easy",
+    "query": "",
+    "expected": {
+      "intent_type": "unknown",
+      "success": false,
+      "error_type": "empty_query"
+    },
+    "metadata": {
+      "steps_expected": 0,
+      "should_handle_gracefully": true
+    }
+  },
+  {
+    "id": "edge_003",
+    "category": "edge_cases",
+    "difficulty": "medium",
+    "query": "asdfghjkl qwertyuiop",
+    "expected": {
+      "intent_type": "unknown",
+      "success": false,
+      "error_type": "unrecognized_input"
+    },
+    "metadata": {
+      "steps_expected": 0,
+      "should_handle_gracefully": true
+    }
+  },
+  {
+    "id": "edge_004",
+    "category": "edge_cases",
+    "difficulty": "medium",
+    "query": "Find compounds similar to CHEMBL99999999",
+    "expected": {
+      "intent_type": "similarity_search",
+      "success": false,
+      "error_type": "reference_not_found"
+    },
+    "metadata": {
+      "steps_expected": 1,
+      "should_handle_gracefully": true
+    }
+  },
+  {
+    "id": "edge_005",
+    "category": "edge_cases",
+    "difficulty": "hard",
+    "query": "Compare properties of aspirin and nonexistent_compound",
+    "expected": {
+      "intent_type": "property_comparison",
+      "success": false,
+      "error_type": "partial_failure",
+      "should_return_partial": true
+    },
+    "metadata": {
+      "steps_expected": 2,
+      "should_handle_gracefully": true
+    }
+  },
+  {
+    "id": "edge_006",
+    "category": "edge_cases",
+    "difficulty": "medium",
+    "query": "Get targets for invalid_smiles_string_@#$",
+    "expected": {
+      "intent_type": "target_query",
+      "success": false,
+      "error_type": "invalid_input"
+    },
+    "metadata": {
+      "steps_expected": 0,
+      "should_handle_gracefully": true
+    }
+  },
+  {
+    "id": "edge_007",
+    "category": "edge_cases",
+    "difficulty": "easy",
+    "query": "What is the weather today?",
+    "expected": {
+      "intent_type": "out_of_scope",
+      "success": false,
+      "error_type": "irrelevant_query"
+    },
+    "metadata": {
+      "steps_expected": 0,
+      "should_handle_gracefully": true
+    }
+  },
+  {
+    "id": "edge_008",
+    "category": "edge_cases",
+    "difficulty": "medium",
+    "query": "Find similar compounds to aspirin with threshold 1.5",
+    "expected": {
+      "intent_type": "similarity_search",
+      "success": false,
+      "error_type": "invalid_parameter",
+      "details": "threshold > 1.0"
+    },
+    "metadata": {
+      "steps_expected": 0,
+      "should_handle_gracefully": true
+    }
+  },
+  {
+    "id": "edge_009",
+    "category": "edge_cases",
+    "difficulty": "hard",
+    "query": "Get properties for CHEMBL25 CHEMBL1 CHEMBL100 [50 more IDs...]",
+    "expected": {
+      "intent_type": "batch_query",
+      "success": true,
+      "should_handle_batch": true
+    },
+    "metadata": {
+      "steps_expected": 3,
+      "parallel_eligible": true,
+      "batch_size": 53
+    }
+  },
+  {
+    "id": "edge_010",
+    "category": "edge_cases",
+    "difficulty": "medium",
+    "query": "aspirin aspirin aspirin",
+    "expected": {
+      "intent_type": "compound_lookup",
+      "success": true,
+      "should_deduplicate": true
+    },
+    "metadata": {
+      "steps_expected": 1
+    }
+  },
+  {
+    "id": "edge_011",
+    "category": "edge_cases",
+    "difficulty": "hard",
+    "query": "Find targets for aspirin and calculate properties and get similar compounds and compare with ibuprofen",
+    "expected": {
+      "intent_type": "multi_step_workflow",
+      "success": true,
+      "should_parse_complex": true
+    },
+    "metadata": {
+      "steps_expected": 5
+    }
+  },
+  {
+    "id": "edge_012",
+    "category": "edge_cases",
+    "difficulty": "easy",
+    "query": "What",
+    "expected": {
+      "intent_type": "unknown",
+      "success": false,
+      "error_type": "incomplete_query"
+    },
+    "metadata": {
+      "steps_expected": 0,
+      "should_handle_gracefully": true
+    }
+  },
+  {
+    "id": "edge_013",
+    "category": "edge_cases",
+    "difficulty": "medium",
+    "query": "CHEMBL25?",
+    "expected": {
+      "intent_type": "compound_lookup",
+      "success": true,
+      "should_strip_punctuation": true
+    },
+    "metadata": {
+      "steps_expected": 1
+    }
+  },
+  {
+    "id": "edge_014",
+    "category": "edge_cases",
+    "difficulty": "hard",
+    "query": "Find compounds with MW > 500 AND LogP < 5 AND HBD < 5 AND HBA < 10 AND PSA < 140",
+    "expected": {
+      "intent_type": "advanced_search",
+      "success": true,
+      "should_handle_complex_filter": true
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "edge_015",
+    "category": "edge_cases",
+    "difficulty": "medium",
+    "query": "Look up compound CHEMBL25CHEMBL1CHEMBL100",
+    "expected": {
+      "intent_type": "compound_lookup",
+      "success": false,
+      "error_type": "ambiguous_input",
+      "should_suggest_alternatives": true
+    },
+    "metadata": {
+      "steps_expected": 0,
+      "should_handle_gracefully": true
+    }
+  }
+]

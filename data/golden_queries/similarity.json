@@ -1,0 +1,237 @@
+[
+  {
+    "id": "sim_001",
+    "category": "similarity",
+    "difficulty": "medium",
+    "query": "Find compounds similar to aspirin",
+    "expected": {
+      "intent_type": "similarity_search",
+      "success": true,
+      "reference_compound": "aspirin",
+      "should_return_list": true
+    },
+    "metadata": {
+      "steps_expected": 2,
+      "cache_eligible": true
+    }
+  },
+  {
+    "id": "sim_002",
+    "category": "similarity",
+    "difficulty": "hard",
+    "query": "Search for analogs of CHEMBL25 with similarity > 0.8",
+    "expected": {
+      "intent_type": "similarity_search",
+      "success": true,
+      "reference_compound": "CHEMBL25",
+      "threshold": 0.8,
+      "should_return_list": true
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "sim_003",
+    "category": "similarity",
+    "difficulty": "medium",
+    "query": "Find similar structures to ibuprofen",
+    "expected": {
+      "intent_type": "similarity_search",
+      "success": true,
+      "reference_compound": "ibuprofen",
+      "should_return_list": true
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "sim_004",
+    "category": "similarity",
+    "difficulty": "hard",
+    "query": "Top 10 most similar compounds to caffeine",
+    "expected": {
+      "intent_type": "similarity_search",
+      "success": true,
+      "reference_compound": "caffeine",
+      "limit": 10,
+      "should_return_list": true
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "sim_005",
+    "category": "similarity",
+    "difficulty": "hard",
+    "query": "Find compounds similar to CC(=O)OC1=CC=CC=C1C(=O)O with Tanimoto > 0.7",
+    "expected": {
+      "intent_type": "similarity_search",
+      "success": true,
+      "reference_smiles": "CC(=O)OC1=CC=CC=C1C(=O)O",
+      "threshold": 0.7,
+      "should_return_list": true
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "sim_006",
+    "category": "similarity",
+    "difficulty": "medium",
+    "query": "Structural neighbors of metformin",
+    "expected": {
+      "intent_type": "similarity_search",
+      "success": true,
+      "reference_compound": "metformin",
+      "should_return_list": true
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "sim_007",
+    "category": "similarity",
+    "difficulty": "hard",
+    "query": "Find analogs of warfarin with at least 85% similarity",
+    "expected": {
+      "intent_type": "similarity_search",
+      "success": true,
+      "reference_compound": "warfarin",
+      "threshold": 0.85,
+      "should_return_list": true
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "sim_008",
+    "category": "similarity",
+    "difficulty": "medium",
+    "query": "Similar molecules to paracetamol",
+    "expected": {
+      "intent_type": "similarity_search",
+      "success": true,
+      "reference_compound": "paracetamol",
+      "should_return_list": true
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "sim_009",
+    "category": "similarity",
+    "difficulty": "hard",
+    "query": "Get 20 closest structural matches to CHEMBL1",
+    "expected": {
+      "intent_type": "similarity_search",
+      "success": true,
+      "reference_compound": "CHEMBL1",
+      "limit": 20,
+      "should_return_list": true
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "sim_010",
+    "category": "similarity",
+    "difficulty": "medium",
+    "query": "Find compounds structurally related to c1ccccc1",
+    "expected": {
+      "intent_type": "similarity_search",
+      "success": true,
+      "reference_smiles": "c1ccccc1",
+      "should_return_list": true
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "sim_011",
+    "category": "similarity",
+    "difficulty": "hard",
+    "query": "Search for aspirin-like compounds with similarity between 0.7 and 0.9",
+    "expected": {
+      "intent_type": "similarity_search",
+      "success": true,
+      "reference_compound": "aspirin",
+      "min_threshold": 0.7,
+      "max_threshold": 0.9,
+      "should_return_list": true
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "sim_012",
+    "category": "similarity",
+    "difficulty": "medium",
+    "query": "Compounds with similar structure to CHEMBL100",
+    "expected": {
+      "intent_type": "similarity_search",
+      "success": true,
+      "reference_compound": "CHEMBL100",
+      "should_return_list": true
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "sim_013",
+    "category": "similarity",
+    "difficulty": "hard",
+    "query": "Top 5 most similar drugs to ibuprofen",
+    "expected": {
+      "intent_type": "similarity_search",
+      "success": true,
+      "reference_compound": "ibuprofen",
+      "limit": 5,
+      "should_return_list": true
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "sim_014",
+    "category": "similarity",
+    "difficulty": "medium",
+    "query": "Find structural analogs of caffeine",
+    "expected": {
+      "intent_type": "similarity_search",
+      "success": true,
+      "reference_compound": "caffeine",
+      "should_return_list": true
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  },
+  {
+    "id": "sim_015",
+    "category": "similarity",
+    "difficulty": "hard",
+    "query": "Search ChEMBL for compounds with > 90% similarity to CHEMBL25",
+    "expected": {
+      "intent_type": "similarity_search",
+      "success": true,
+      "reference_compound": "CHEMBL25",
+      "threshold": 0.9,
+      "should_return_list": true
+    },
+    "metadata": {
+      "steps_expected": 2
+    }
+  }
+]

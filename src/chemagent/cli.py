@@ -447,6 +447,32 @@ Examples:
         version="ChemAgent 1.0.0"
     )
     
+    parser.add_argument(
+        "--batch",
+        type=str,
+        help="Process queries from file (one per line)"
+    )
+    
+    parser.add_argument(
+        "--eval",
+        type=str,
+        help="Run evaluation on golden queries (specify category or 'all')"
+    )
+    
+    parser.add_argument(
+        "--eval-limit",
+        type=int,
+        help="Limit number of evaluation queries"
+    )
+    
+    parser.add_argument(
+        "--report",
+        type=str,
+        choices=["text", "json", "html"],
+        default="text",
+        help="Evaluation report format (default: text)"
+    )
+    
     args = parser.parse_args()
     
     # Create CLI
@@ -459,8 +485,74 @@ Examples:
         max_workers=args.max_workers
     )
     
-    # Run
-    if args.query:
+    # Run based on mode
+    if args.eval:
+        # Evaluation mode
+        from chemagent.evaluation import GoldenQueryEvaluator, MetricsCalculator, ReportGenerator
+        from pathlib import Path
+        
+        print(f"🧪 Running evaluation on {args.eval} queries...")
+        
+        evaluator = GoldenQueryEvaluator()
+        category = None if args.eval == "all" else args.eval
+        results = evaluator.evaluate_all(category=category, limit=args.eval_limit)
+        
+        # Calculate metrics
+        metrics = MetricsCalculator.calculate(results)
+        
+        # Generate report
+        output_dir = Path("reports")
+        output_dir.mkdir(exist_ok=True)
+        
+        if args.report == "text":
+            report = ReportGenerator.generate_text_report(
+                results, metrics, output_dir / "evaluation_report.txt"
+            )
+            print(report)
+        elif args.report == "json":
+            ReportGenerator.generate_json_report(
+                results, metrics, output_dir / "evaluation_report.json"
+            )
+            print(f"✓ JSON report saved to reports/evaluation_report.json")
+        elif args.report == "html":
+            ReportGenerator.generate_html_report(
+                results, metrics, output_dir / "evaluation_report.html"
+            )
+            print(f"✓ HTML report saved to reports/evaluation_report.html")
+            
+    elif args.batch:
+        # Batch processing mode
+        import time
+        
+        print(f"📦 Processing batch queries from {args.batch}...")
+        
+        with open(args.batch) as f:
+            queries = [line.strip() for line in f if line.strip()]
+        
+        print(f"Found {len(queries)} queries")
+        
+        start_time = time.time()
+        results = []
+        
+        for i, query in enumerate(queries, 1):
+            print(f"\n[{i}/{len(queries)}] {query}")
+            result = cli.process_query(query)
+            results.append(result)
+        
+        elapsed = time.time() - start_time
+        
+        # Summary
+        successful = sum(1 for r in results if r and r.get("success"))
+        print(f"\n{'='*80}")
+        print(f"Batch Processing Complete")
+        print(f"{'='*80}")
+        print(f"Total queries: {len(queries)}")
+        print(f"Successful: {successful}")
+        print(f"Failed: {len(queries) - successful}")
+        print(f"Total time: {elapsed:.2f}s")
+        print(f"Average time: {elapsed/len(queries):.2f}s per query")
+        
+    elif args.query:
         # Single query mode
         cli.process_query(args.query)
     else:

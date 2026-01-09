@@ -1,0 +1,229 @@
+[
+  {
+    "id": "compound_001",
+    "category": "compound_lookup",
+    "difficulty": "easy",
+    "query": "What is CHEMBL25?",
+    "expected": {
+      "intent_type": "compound_lookup",
+      "success": true,
+      "entity_type": "chembl_id",
+      "entity_value": "CHEMBL25",
+      "should_contain": ["aspirin", "acetylsalicylic"]
+    },
+    "metadata": {
+      "steps_expected": 1,
+      "cache_eligible": true,
+      "parallel_eligible": false
+    }
+  },
+  {
+    "id": "compound_002",
+    "category": "compound_lookup",
+    "difficulty": "easy",
+    "query": "Look up compound CHEMBL1",
+    "expected": {
+      "intent_type": "compound_lookup",
+      "success": true,
+      "entity_type": "chembl_id",
+      "entity_value": "CHEMBL1",
+      "should_contain": ["sorafenib"]
+    },
+    "metadata": {
+      "steps_expected": 1,
+      "cache_eligible": true
+    }
+  },
+  {
+    "id": "compound_003",
+    "category": "compound_lookup",
+    "difficulty": "medium",
+    "query": "Find information about aspirin",
+    "expected": {
+      "intent_type": "compound_lookup",
+      "success": true,
+      "entity_type": "compound_name",
+      "entity_value": "aspirin",
+      "should_contain": ["CHEMBL25", "acetylsalicylic"]
+    },
+    "metadata": {
+      "steps_expected": 1,
+      "cache_eligible": true
+    }
+  },
+  {
+    "id": "compound_004",
+    "category": "compound_lookup",
+    "difficulty": "medium",
+    "query": "What is ibuprofen?",
+    "expected": {
+      "intent_type": "compound_lookup",
+      "success": true,
+      "entity_type": "compound_name",
+      "should_contain": ["CHEMBL"]
+    },
+    "metadata": {
+      "steps_expected": 1
+    }
+  },
+  {
+    "id": "compound_005",
+    "category": "compound_lookup",
+    "difficulty": "easy",
+    "query": "Tell me about CHEMBL100",
+    "expected": {
+      "intent_type": "compound_lookup",
+      "success": true,
+      "entity_type": "chembl_id",
+      "entity_value": "CHEMBL100"
+    },
+    "metadata": {
+      "steps_expected": 1
+    }
+  },
+  {
+    "id": "compound_006",
+    "category": "compound_lookup",
+    "difficulty": "hard",
+    "query": "Look up CC(=O)OC1=CC=CC=C1C(=O)O",
+    "expected": {
+      "intent_type": "compound_lookup",
+      "success": true,
+      "entity_type": "smiles",
+      "should_contain": ["aspirin", "CHEMBL25"]
+    },
+    "metadata": {
+      "steps_expected": 1
+    }
+  },
+  {
+    "id": "compound_007",
+    "category": "compound_lookup",
+    "difficulty": "medium",
+    "query": "What's compound CHEMBL521?",
+    "expected": {
+      "intent_type": "compound_lookup",
+      "success": true,
+      "entity_value": "CHEMBL521"
+    },
+    "metadata": {
+      "steps_expected": 1
+    }
+  },
+  {
+    "id": "compound_008",
+    "category": "compound_lookup",
+    "difficulty": "easy",
+    "query": "Get details for CHEMBL279?",
+    "expected": {
+      "intent_type": "compound_lookup",
+      "success": true,
+      "entity_value": "CHEMBL279"
+    },
+    "metadata": {
+      "steps_expected": 1
+    }
+  },
+  {
+    "id": "compound_009",
+    "category": "compound_lookup",
+    "difficulty": "medium",
+    "query": "Information on caffeine please",
+    "expected": {
+      "intent_type": "compound_lookup",
+      "success": true,
+      "entity_type": "compound_name",
+      "entity_value": "caffeine"
+    },
+    "metadata": {
+      "steps_expected": 1
+    }
+  },
+  {
+    "id": "compound_010",
+    "category": "compound_lookup",
+    "difficulty": "medium",
+    "query": "What do you know about paracetamol?",
+    "expected": {
+      "intent_type": "compound_lookup",
+      "success": true,
+      "entity_type": "compound_name",
+      "entity_value": "paracetamol"
+    },
+    "metadata": {
+      "steps_expected": 1
+    }
+  },
+  {
+    "id": "compound_011",
+    "category": "compound_lookup",
+    "difficulty": "easy",
+    "query": "CHEMBL999 information",
+    "expected": {
+      "intent_type": "compound_lookup",
+      "success": true,
+      "entity_value": "CHEMBL999"
+    },
+    "metadata": {
+      "steps_expected": 1
+    }
+  },
+  {
+    "id": "compound_012",
+    "category": "compound_lookup",
+    "difficulty": "hard",
+    "query": "Find compound with SMILES c1ccccc1",
+    "expected": {
+      "intent_type": "compound_lookup",
+      "success": true,
+      "entity_type": "smiles",
+      "should_contain": ["benzene"]
+    },
+    "metadata": {
+      "steps_expected": 1
+    }
+  },
+  {
+    "id": "compound_013",
+    "category": "compound_lookup",
+    "difficulty": "medium",
+    "query": "What is warfarin?",
+    "expected": {
+      "intent_type": "compound_lookup",
+      "success": true,
+      "entity_type": "compound_name"
+    },
+    "metadata": {
+      "steps_expected": 1
+    }
+  },
+  {
+    "id": "compound_014",
+    "category": "compound_lookup",
+    "difficulty": "medium",
+    "query": "Tell me about metformin",
+    "expected": {
+      "intent_type": "compound_lookup",
+      "success": true,
+      "entity_type": "compound_name",
+      "entity_value": "metformin"
+    },
+    "metadata": {
+      "steps_expected": 1
+    }
+  },
+  {
+    "id": "compound_015",
+    "category": "compound_lookup",
+    "difficulty": "easy",
+    "query": "CHEMBL1234567",
+    "expected": {
+      "intent_type": "compound_lookup",
+      "success": true,
+      "entity_value": "CHEMBL1234567"
+    },
+    "metadata": {
+      "steps_expected": 1
+    }
+  }
+]

@@ -144,6 +144,35 @@ class ErrorResponse(BaseModel):
     timestamp: str
 
 
+class BatchQueryRequest(BaseModel):
+    """Batch query request"""
+    queries: List[str] = Field(..., description="List of queries to process", min_items=1, max_items=100)
+    use_cache: bool = Field(True, description="Enable result caching")
+    verbose: bool = Field(False, description="Include execution details")
+    enable_parallel: bool = Field(True, description="Enable parallel processing")
+    max_workers: int = Field(4, description="Maximum parallel workers", ge=1, le=16)
+    
+    class Config:
+        json_schema_extra = {
+            "example": {
+                "queries": ["What is CHEMBL25?", "Find similar compounds to aspirin"],
+                "use_cache": True,
+                "verbose": False,
+                "enable_parallel": True,
+                "max_workers": 4
+            }
+        }
+
+
+class BatchQueryResponse(BaseModel):
+    """Batch query response"""
+    total_queries: int
+    successful: int
+    failed: int
+    total_time_ms: float
+    results: List[QueryResponse]
+
+
 # ============================================================================
 # FastAPI Application
 # ============================================================================
@@ -601,6 +630,109 @@ async def query_stream(request: QueryRequest):
             "Cache-Control": "no-cache",
             "X-Accel-Buffering": "no"  # Disable nginx buffering
         }
+    )
+
+
+# ============================================================================
+# Batch Processing Endpoint
+# ============================================================================
+
+@app.post("/batch", response_model=BatchQueryResponse, status_code=status.HTTP_200_OK)
+async def process_batch_queries(request: BatchQueryRequest) -> BatchQueryResponse:
+    """Process multiple queries in batch with optional parallelization.
+    
+    This endpoint allows processing multiple queries efficiently,
+    with support for parallel execution and result caching.
+    
+    Args:
+        request: Batch query request with list of queries
+        
+    Returns:
+        BatchQueryResponse with all results
+        
+    Example:
+        ```json
+        {
+            "queries": [
+                "What is CHEMBL25?",
+                "Find similar compounds to aspirin",
+                "Get properties for caffeine"
+            ],
+            "enable_parallel": true,
+            "max_workers": 4
+        }
+        ```
+    """
+    start_time = datetime.now()
+    results = []
+    successful = 0
+    failed = 0
+    
+    async def process_single_query(query: str) -> QueryResponse:
+        """Process a single query"""
+        try:
+            # Parse intent
+            intent_result = intent_parser.parse(query)
+            
+            # Plan execution
+            plan = planner.plan(intent_result)
+            
+            # Execute plan
+            execution_start = datetime.now()
+            result = await asyncio.to_thread(
+                executor.execute,
+                plan,
+                use_cache=request.use_cache
+            )
+            execution_time = (datetime.now() - execution_start).total_seconds() * 1000
+            
+            response = QueryResponse(
+                status="success" if result.get("success") else "error",
+                query=query,
+                intent=intent_result.intent_type,
+                result=result,
+                execution_time_ms=execution_time,
+                cached=result.get("cached", False),
+                error=result.get("error"),
+                details={"steps": result.get("steps", [])} if request.verbose else None
+            )
+            
+            return response
+            
+        except Exception as e:
+            return QueryResponse(
+                status="error",
+                query=query,
+                error=str(e),
+                execution_time_ms=0
+            )
+    
+    # Process queries
+    if request.enable_parallel and len(request.queries) > 1:
+        # Parallel processing
+        tasks = [process_single_query(q) for q in request.queries]
+        results = await asyncio.gather(*tasks)
+    else:
+        # Sequential processing
+        for query in request.queries:
+            result = await process_single_query(query)
+            results.append(result)
+    
+    # Count successes and failures
+    for result in results:
+        if result.status == "success":
+            successful += 1
+        else:
+            failed += 1
+    
+    total_time = (datetime.now() - start_time).total_seconds() * 1000
+    
+    return BatchQueryResponse(
+        total_queries=len(request.queries),
+        successful=successful,
+        failed=failed,
+        total_time_ms=total_time,
+        results=results
     )
 
 

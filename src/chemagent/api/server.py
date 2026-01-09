@@ -15,16 +15,19 @@ from datetime import datetime
 from typing import Dict, List, Optional, Any
 import traceback
 import os
+import json
+import asyncio
 
 from fastapi import FastAPI, HTTPException, Query, status
 from fastapi.middleware.cors import CORSMiddleware
-from fastapi.responses import JSONResponse
+from fastapi.responses import JSONResponse, StreamingResponse
 from pydantic import BaseModel, Field, validator
 
 from chemagent.core.intent_parser import IntentParser
 from chemagent.core.query_planner import QueryPlanner
 from chemagent.core.executor import QueryExecutor, ToolRegistry
 from chemagent.caching import ResultCache, add_caching_to_registry
+from chemagent.config import get_config, load_dotenv_if_exists
 
 
 # ============================================================================
@@ -519,3 +522,134 @@ if __name__ == "__main__":
         reload=True,
         log_level="info"
     )
+
+
+# ============================================================================
+# Streaming API
+# ============================================================================
+
+@app.post("/query/stream")
+async def query_stream(request: QueryRequest):
+    """
+    Stream query execution with real-time progress updates.
+    
+    Returns Server-Sent Events (SSE) with execution progress.
+    """
+    if not state.initialized:
+        raise HTTPException(
+            status_code=status.HTTP_503_SERVICE_UNAVAILABLE,
+            detail="Service is initializing"
+        )
+    
+    async def event_generator():
+        """Generate SSE events for query execution"""
+        try:
+            # Parse intent
+            yield f"data: {json.dumps({'status': 'parsing', 'message': 'Parsing query...'})}\n\n"
+            await asyncio.sleep(0.1)  # Allow client to receive
+            
+            parsed = state.intent_parser.parse(request.query)
+            yield f"data: {json.dumps({'status': 'parsed', 'intent': parsed.intent_type, 'entities': len(parsed.entities)})}\n\n"
+            
+            # Plan query
+            yield f"data: {json.dumps({'status': 'planning', 'message': 'Creating execution plan...'})}\n\n"
+            await asyncio.sleep(0.1)
+            
+            plan = state.query_planner.plan(parsed)
+            yield f"data: {json.dumps({'status': 'planned', 'steps': len(plan.steps), 'parallel_groups': len(plan.get_parallel_groups())})}\n\n"
+            
+            # Execute steps
+            result = state.executor.execute_plan(
+                plan,
+                enable_parallel=request.enable_parallel,
+                max_workers=request.max_workers
+            )
+            
+            # Send progress updates (simulated - in real impl, executor would yield progress)
+            for i, step in enumerate(plan.steps):
+                yield f"data: {json.dumps({'status': 'executing', 'step': i + 1, 'total': len(plan.steps), 'tool': step.tool})}\n\n"
+                await asyncio.sleep(0.1)
+            
+            # Send final result
+            response_data = {
+                "status": "complete",
+                "result": result["result"],
+                "success": result.get("success", True)
+            }
+            
+            if request.verbose:
+                response_data["metadata"] = {
+                    "intent": parsed.intent_type,
+                    "steps": len(plan.steps),
+                    "execution_time_ms": result.get("execution_time_ms", 0)
+                }
+            
+            yield f"data: {json.dumps(response_data)}\n\n"
+            
+        except Exception as e:
+            error_data = {
+                "status": "error",
+                "error": str(e),
+                "traceback": traceback.format_exc() if request.verbose else None
+            }
+            yield f"data: {json.dumps(error_data)}\n\n"
+    
+    return StreamingResponse(
+        event_generator(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "X-Accel-Buffering": "no"  # Disable nginx buffering
+        }
+    )
+
+
+# ============================================================================
+# Configuration Endpoint
+# ============================================================================
+
+@app.get("/config")
+async def get_server_config():
+    """Get server configuration (non-sensitive fields only)"""
+    config = get_config()
+    
+    return {
+        "server": {
+            "port": config.port,
+            "workers": config.workers
+        },
+        "features": {
+            "parallel_execution": config.enable_parallel,
+            "max_workers": config.max_workers,
+            "caching": config.cache_enabled,
+            "streaming": config.enable_streaming,
+            "metrics": config.enable_metrics
+        },
+        "limits": {
+            "rate_limit_per_minute": config.rate_limit_per_minute,
+            "auth_enabled": config.enable_auth
+        }
+    }
+
+
+# ============================================================================
+# Startup: Load Configuration
+# ============================================================================
+
+@app.on_event("startup")
+async def load_configuration():
+    """Load configuration on startup"""
+    # Try to load .env file
+    load_dotenv_if_exists()
+    
+    # Validate configuration
+    config = get_config()
+    print(f"✓ Configuration loaded successfully")
+    print(f"  - Server: {config.host}:{config.port}")
+    print(f"  - Workers: {config.workers}")
+    print(f"  - Parallel execution: {config.enable_parallel} (max workers: {config.max_workers})")
+    print(f"  - Caching: {config.cache_enabled}")
+    print(f"  - Streaming: {config.enable_streaming}")
+    print(f"  - Metrics: {config.enable_metrics}")
+    print(f"  - Auth: {config.enable_auth}")
+

@@ -1,44 +1,68 @@
 version: '3.8'
 
 services:
-  chemagent:
+  # ChemAgent API Server
+  chemagent-api:
     build:
       context: .
       dockerfile: Dockerfile
     image: chemagent:latest
-    container_name: chemagent
+    container_name: chemagent-api
+    restart: unless-stopped
     ports:
-      - "7860:7860"  # Gradio web interface
-    volumes:
-      - ./data:/app/data
-      - ./logs:/app/logs
-      - ./outputs:/app/outputs
+      - "${CHEMAGENT_PORT:-8000}:8000"
     environment:
-      - CHEMAGENT_ENV=production
-      - PYTHONUNBUFFERED=1
-      # LLM API keys (pass from host environment)
-      - OPENAI_API_KEY=${OPENAI_API_KEY}
-      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
-      - GROQ_API_KEY=${GROQ_API_KEY}
-    restart: unless-stopped
-    networks:
-      - chemagent-network
-
-  # Optional: Redis for caching
-  redis:
-    image: redis:7-alpine
-    container_name: chemagent-redis
-    ports:
-      - "6379:6379"
+      - CHEMAGENT_PORT=8000
+      - CHEMAGENT_WORKERS=${CHEMAGENT_WORKERS:-4}
+      - CHEMAGENT_CACHE_ENABLED=${CHEMAGENT_CACHE_ENABLED:-true}
+      - CHEMAGENT_LOG_LEVEL=${CHEMAGENT_LOG_LEVEL:-info}
+      - CHEMAGENT_PARALLEL=${CHEMAGENT_PARALLEL:-true}
+      - CHEMAGENT_MAX_WORKERS=${CHEMAGENT_MAX_WORKERS:-4}
+      - ENABLE_AUTH=${ENABLE_AUTH:-false}
+      - CHEMAGENT_STREAMING=${CHEMAGENT_STREAMING:-true}
+      - CHEMAGENT_METRICS=${CHEMAGENT_METRICS:-true}
     volumes:
-      - redis-data:/data
-    restart: unless-stopped
+      # Persist cache, logs, and data
+      - chemagent-cache:/app/.cache
+      - chemagent-logs:/app/logs
+      - chemagent-data:/app/data
     networks:
       - chemagent-network
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 40s
+
+  # Optional: Redis cache (uncomment to enable external Redis)
+  # redis:
+  #   image: redis:7-alpine
+  #   container_name: chemagent-redis
+  #   restart: unless-stopped
+  #   ports:
+  #     - "6379:6379"
+  #   volumes:
+  #     - redis-data:/data
+  #   networks:
+  #     - chemagent-network
+  #   command: redis-server --appendonly yes
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 10s
+  #     timeout: 3s
+  #     retries: 3
+
+volumes:
+  chemagent-cache:
+    driver: local
+  chemagent-logs:
+    driver: local
+  chemagent-data:
+    driver: local
+  # redis-data:
+  #   driver: local
 
 networks:
   chemagent-network:
     driver: bridge
-
-volumes:
-  redis-data:

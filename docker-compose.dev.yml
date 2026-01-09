@@ -1,0 +1,46 @@
+version: '3.8'
+
+# Development docker-compose with volume mounts for live code reloading
+# Usage: docker-compose -f docker-compose.dev.yml up
+
+services:
+  chemagent-api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chemagent-api-dev
+    restart: unless-stopped
+    ports:
+      - "${CHEMAGENT_PORT:-8000}:8000"
+    environment:
+      - CHEMAGENT_PORT=8000
+      - CHEMAGENT_WORKERS=1  # Single worker for development
+      - CHEMAGENT_CACHE_ENABLED=true
+      - CHEMAGENT_LOG_LEVEL=debug  # Verbose logging
+      - ENABLE_AUTH=false
+      - PYTHONUNBUFFERED=1
+    volumes:
+      # Mount source code for live reloading
+      - ./src:/app/src:ro
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./tests:/app/tests:ro
+    networks:
+      - chemagent-network
+    command: >
+      sh -c "pip install watchdog &&
+             uvicorn src.chemagent.api.server:app
+             --host 0.0.0.0
+             --port 8000
+             --reload
+             --reload-dir /app/src"
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 10s
+      timeout: 5s
+      retries: 3
+      start_period: 20s
+
+networks:
+  chemagent-network:
+    driver: bridge

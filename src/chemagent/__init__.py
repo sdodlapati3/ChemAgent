@@ -26,13 +26,15 @@ __author__ = "Your Name"
 __license__ = "MIT"
 
 # Core imports for easy access
-from chemagent.core.orchestrator import ChemOrchestrator
-from chemagent.core.intent_parser import IntentParser, ParsedIntent
-from chemagent.core.intent_types import IntentType
+# from chemagent.core.orchestrator import ChemOrchestrator
+# from chemagent.core.intent_parser import IntentParser, ParsedIntent
+# from chemagent.core.intent_types import IntentType
 
 # Tool imports
 from chemagent.tools.rdkit_tools import RDKitTools
 from chemagent.tools.chembl_client import ChEMBLClient
+from chemagent.tools.bindingdb_client import BindingDBClient
+from chemagent.tools.uniprot_client import UniProtClient
 
 # Facade
 class ChemAgent:
@@ -54,7 +56,11 @@ class ChemAgent:
         Args:
             config_path: Optional path to config file
         """
-        self.orchestrator = ChemOrchestrator(config_path=config_path)
+        # self.orchestrator = ChemOrchestrator(config_path=config_path)
+        self.rdkit = RDKitTools()
+        self.chembl = ChEMBLClient()
+        self.bindingdb = BindingDBClient()
+        self.uniprot = UniProtClient()
     
     def query(self, user_query: str):
         """
@@ -66,16 +72,20 @@ class ChemAgent:
         Returns:
             QueryResult with answer and provenance
         """
-        return self.orchestrator.query(user_query)
+        # return self.orchestrator.query(user_query)
+        # TODO: Implement orchestrator
+        return f"Processing: {user_query}"
 
 
 __all__ = [
     "__version__",
     "ChemAgent",
-    "ChemOrchestrator",
-    "IntentParser",
-    "ParsedIntent",
-    "IntentType",
+    # "ChemOrchestrator",
+    # "IntentParser",
+    # "ParsedIntent",
+    # "IntentType",
     "RDKitTools",
     "ChEMBLClient",
+    "BindingDBClient",
+    "UniProtClient",
 ]

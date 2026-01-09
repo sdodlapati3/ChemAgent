@@ -1,0 +1,25 @@
+# ChemAgent Requirements
+# ======================
+
+# Core chemistry
+rdkit>=2023.9.1
+
+# HTTP requests
+requests>=2.31.0
+
+# Data validation
+pydantic>=2.0.0
+
+# Database clients
+chembl-webresource-client>=0.10.8
+
+# Caching
+diskcache>=5.6.3
+
+# Development dependencies (install with: pip install -e ".[dev]")
+# pytest>=7.4.0
+# pytest-cov>=4.1.0
+# black>=23.7.0
+# isort>=5.12.0
+# mypy>=1.4.0
+# ruff>=0.0.280

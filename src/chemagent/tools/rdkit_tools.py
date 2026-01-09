@@ -26,13 +26,18 @@ from typing import Any, Dict, List, Optional, Tuple
 try:
     from rdkit import Chem
     from rdkit.Chem import AllChem, Descriptors, Lipinski, rdMolDescriptors
-    from rdkit.Chem.MolStandardize import rdMolStandardize
+    try:
+        from rdkit.Chem.MolStandardize import rdMolStandardize
+        STANDARDIZER_AVAILABLE = True
+    except (ImportError, AttributeError):
+        STANDARDIZER_AVAILABLE = False
     from rdkit.Chem.Scaffolds import MurckoScaffold
     from rdkit import __version__ as rdkit_version
     
     RDKIT_AVAILABLE = True
 except ImportError:
     RDKIT_AVAILABLE = False
+    STANDARDIZER_AVAILABLE = False
     rdkit_version = "not installed"
 
 logger = logging.getLogger(__name__)
@@ -217,10 +222,21 @@ class RDKitTools:
                 "  conda install -c conda-forge rdkit"
             )
         
-        # Initialize standardizer
-        self.standardizer = rdMolStandardize.Standardizer()
-        self.uncharger = rdMolStandardize.Uncharger()
-        self.largest_fragment = rdMolStandardize.LargestFragmentChooser()
+        # Initialize standardizer if available
+        if STANDARDIZER_AVAILABLE:
+            try:
+                self.standardizer = rdMolStandardize.Standardizer()
+                self.uncharger = rdMolStandardize.Uncharger()
+                self.largest_fragment = rdMolStandardize.LargestFragmentChooser()
+            except AttributeError:
+                # Fallback if methods don't exist
+                self.standardizer = None
+                self.uncharger = None
+                self.largest_fragment = None
+        else:
+            self.standardizer = None
+            self.uncharger = None
+            self.largest_fragment = None
     
     # =========================================================================
     # SMILES Standardization
@@ -267,15 +283,16 @@ class RDKitTools:
             if mol is None:
                 raise ValueError(f"Invalid SMILES: {smiles}")
             
-            # Remove salts
-            if remove_salts:
+            # Remove salts (if standardizer available)
+            if remove_salts and self.largest_fragment:
                 mol = self.largest_fragment.choose(mol)
             
-            # Standardize
-            mol = self.standardizer.standardize(mol)
+            # Standardize (if standardizer available)
+            if self.standardizer:
+                mol = self.standardizer.standardize(mol)
             
-            # Neutralize
-            if neutralize:
+            # Neutralize (if standardizer available)
+            if neutralize and self.uncharger:
                 mol = self.uncharger.uncharge(mol)
             
             # Generate identifiers
@@ -329,6 +346,21 @@ class RDKitTools:
             >>> props.logp
             1.19
         """
+        # Calculate fraction of sp3 carbons (with fallback for older RDKit versions)
+        try:
+            fraction_csp3 = Descriptors.FractionCsp3(mol)
+        except AttributeError:
+            # Fallback: manually calculate fraction of sp3 carbons
+            try:
+                from rdkit.Chem import Lipinski
+                fraction_csp3 = Lipinski.FractionCsp3(mol)
+            except (ImportError, AttributeError):
+                # Last resort: calculate manually
+                num_sp3 = sum(1 for atom in mol.GetAtoms() 
+                             if atom.GetAtomicNum() == 6 and atom.GetHybridization() == Chem.HybridizationType.SP3)
+                num_carbons = sum(1 for atom in mol.GetAtoms() if atom.GetAtomicNum() == 6)
+                fraction_csp3 = num_sp3 / num_carbons if num_carbons > 0 else 0.0
+        
         return MolecularProperties(
             molecular_weight=Descriptors.MolWt(mol),
             exact_mass=Descriptors.ExactMolWt(mol),
@@ -341,7 +373,7 @@ class RDKitTools:
             num_rings=Descriptors.RingCount(mol),
             num_heteroatoms=Descriptors.NumHeteroatoms(mol),
             formal_charge=Chem.GetFormalCharge(mol),
-            fraction_csp3=Descriptors.FractionCsp3(mol),
+            fraction_csp3=fraction_csp3,
             num_stereocenters=len(Chem.FindMolChiralCenters(mol, includeUnassigned=True)),
             provenance=Provenance.create_rdkit("calc_molecular_properties"),
         )

@@ -1,0 +1,44 @@
+version: '3.8'
+
+services:
+  chemagent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    image: chemagent:latest
+    container_name: chemagent
+    ports:
+      - "7860:7860"  # Gradio web interface
+    volumes:
+      - ./data:/app/data
+      - ./logs:/app/logs
+      - ./outputs:/app/outputs
+    environment:
+      - CHEMAGENT_ENV=production
+      - PYTHONUNBUFFERED=1
+      # LLM API keys (pass from host environment)
+      - OPENAI_API_KEY=${OPENAI_API_KEY}
+      - ANTHROPIC_API_KEY=${ANTHROPIC_API_KEY}
+      - GROQ_API_KEY=${GROQ_API_KEY}
+    restart: unless-stopped
+    networks:
+      - chemagent-network
+
+  # Optional: Redis for caching
+  redis:
+    image: redis:7-alpine
+    container_name: chemagent-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis-data:/data
+    restart: unless-stopped
+    networks:
+      - chemagent-network
+
+networks:
+  chemagent-network:
+    driver: bridge
+
+volumes:
+  redis-data:

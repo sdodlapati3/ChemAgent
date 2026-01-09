@@ -1,0 +1,139 @@
+[build-system]
+requires = ["setuptools>=65.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "chemagent"
+version = "0.1.0"
+description = "AI-Powered Pharmaceutical Research Assistant"
+readme = "README.md"
+authors = [
+    {name = "Your Name", email = "your.email@institution.edu"}
+]
+license = {text = "MIT"}
+classifiers = [
+    "Development Status :: 3 - Alpha",
+    "Intended Audience :: Science/Research",
+    "License :: OSI Approved :: MIT License",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.10",
+    "Programming Language :: Python :: 3.11",
+    "Topic :: Scientific/Engineering :: Chemistry",
+    "Topic :: Scientific/Engineering :: Bio-Informatics",
+]
+requires-python = ">=3.10"
+dependencies = [
+    "rdkit>=2023.9.1",
+    "requests>=2.31.0",
+    "pydantic>=2.0.0",
+    "numpy>=1.24.0",
+    "pandas>=2.0.0",
+    "chembl-webresource-client>=0.10.8",
+    "python-dotenv>=1.0.0",
+    "diskcache>=5.6.0",
+    "tenacity>=8.2.0",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest>=7.4.0",
+    "pytest-cov>=4.1.0",
+    "pytest-asyncio>=0.21.0",
+    "black>=23.7.0",
+    "isort>=5.12.0",
+    "mypy>=1.5.0",
+    "ruff>=0.0.285",
+]
+llm = [
+    "openai>=1.0.0",
+    "google-generativeai>=0.3.0",
+    "anthropic>=0.7.0",
+    "transformers>=4.35.0",
+    "faiss-cpu>=1.7.4",
+]
+web = [
+    "gradio>=4.0.0",
+    "plotly>=5.17.0",
+]
+all = [
+    "chemagent[dev,llm,web]",
+]
+
+[project.urls]
+Homepage = "https://github.com/yourusername/ChemAgent"
+Documentation = "https://chemagent.readthedocs.io"
+Repository = "https://github.com/yourusername/ChemAgent"
+Issues = "https://github.com/yourusername/ChemAgent/issues"
+
+[project.scripts]
+chemagent = "chemagent.cli:main"
+
+[tool.setuptools]
+packages = ["chemagent"]
+package-dir = {"" = "src"}
+
+[tool.setuptools.package-data]
+chemagent = ["data/**/*"]
+
+[tool.black]
+line-length = 100
+target-version = ['py310']
+include = '\.pyi?$'
+extend-exclude = '''
+/(
+  # directories
+  \.eggs
+  | \.git
+  | \.hg
+  | \.mypy_cache
+  | \.tox
+  | \.venv
+  | build
+  | dist
+)/
+'''
+
+[tool.isort]
+profile = "black"
+line_length = 100
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+ensure_newline_before_comments = true
+
+[tool.mypy]
+python_version = "3.10"
+warn_return_any = true
+warn_unused_configs = true
+disallow_untyped_defs = true
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+python_files = "test_*.py"
+python_classes = "Test*"
+python_functions = "test_*"
+addopts = "--cov=chemagent --cov-report=html --cov-report=term-missing"
+markers = [
+    "slow: marks tests as slow (deselect with '-m \"not slow\"')",
+    "integration: marks tests as integration tests",
+    "requires_api: marks tests that require external API access",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+select = [
+    "E",  # pycodestyle errors
+    "W",  # pycodestyle warnings
+    "F",  # pyflakes
+    "I",  # isort
+    "C",  # flake8-comprehensions
+    "B",  # flake8-bugbear
+]
+ignore = [
+    "E501",  # line too long (handled by black)
+    "B008",  # do not perform function calls in argument defaults
+    "C901",  # too complex
+]

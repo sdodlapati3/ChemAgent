@@ -97,9 +97,16 @@ class ToolRegistry:
     Maps tool names to callable functions.
     """
     
-    def __init__(self):
-        """Initialize registry."""
+    def __init__(self, use_real_tools: bool = False):
+        """
+        Initialize registry.
+        
+        Args:
+            use_real_tools: If True, register real tool implementations.
+                          If False, use placeholder tools for testing.
+        """
         self._tools: Dict[str, Callable] = {}
+        self._use_real_tools = use_real_tools
         self._register_default_tools()
     
     def register(self, name: str, func: Callable) -> None:
@@ -147,8 +154,21 @@ class ToolRegistry:
     
     def _register_default_tools(self) -> None:
         """Register default tools."""
-        # Placeholder tools - actual implementations will use real clients
-        
+        if self._use_real_tools:
+            # Register real tool implementations
+            try:
+                from chemagent.tools.tool_implementations import register_real_tools
+                register_real_tools(self)
+            except ImportError as e:
+                # Fall back to placeholder tools if imports fail
+                print(f"Warning: Could not load real tools ({e}), using placeholders")
+                self._register_placeholder_tools()
+        else:
+            # Use placeholder tools for testing
+            self._register_placeholder_tools()
+    
+    def _register_placeholder_tools(self) -> None:
+        """Register placeholder tools for testing."""
         # ChEMBL tools
         self.register("chembl_search_by_name", self._placeholder_tool)
         self.register("chembl_get_compound", self._placeholder_tool)
@@ -198,14 +218,22 @@ class QueryExecutor:
         <ExecutionStatus.COMPLETED: 'completed'>
     """
     
-    def __init__(self, tool_registry: Optional[ToolRegistry] = None):
+    def __init__(
+        self,
+        tool_registry: Optional[ToolRegistry] = None,
+        use_real_tools: bool = False
+    ):
         """
         Initialize executor.
         
         Args:
-            tool_registry: Registry of available tools
+            tool_registry: Registry of available tools. If None, creates default.
+            use_real_tools: If True and no registry provided, use real tool implementations.
         """
-        self.registry = tool_registry or ToolRegistry()
+        if tool_registry is None:
+            self.registry = ToolRegistry(use_real_tools=use_real_tools)
+        else:
+            self.registry = tool_registry
         self._execution_context: Dict[str, Any] = {}
     
     def execute(self, plan: QueryPlan) -> ExecutionResult:

@@ -3,6 +3,8 @@ Query execution engine.
 
 Executes query plans by running steps in order, managing dependencies,
 resolving variable references, and aggregating results.
+
+Supports both serial and parallel execution modes for improved performance.
 """
 
 import re
@@ -12,6 +14,7 @@ from enum import Enum
 from typing import Any, Callable, Dict, List, Optional
 
 from chemagent.core.query_planner import PlanStep, QueryPlan
+from chemagent.core.parallel import ParallelExecutor, ExecutionMetrics
 
 
 class ExecutionStatus(Enum):
@@ -31,6 +34,7 @@ class StepResult:
     
     Attributes:
         step_id: ID of the step
+        tool_name: Name of the tool executed
         status: Execution status
         output: Step output (if successful)
         error: Error message (if failed)
@@ -40,6 +44,7 @@ class StepResult:
     """
     
     step_id: int
+    tool_name: str
     status: ExecutionStatus
     output: Any = None
     error: Optional[str] = None
@@ -70,6 +75,7 @@ class ExecutionResult:
         total_duration_ms: Total execution time
         steps_completed: Number of completed steps
         steps_failed: Number of failed steps
+        parallel_metrics: Parallel execution metrics (if enabled)
     """
     
     status: ExecutionStatus
@@ -79,6 +85,7 @@ class ExecutionResult:
     total_duration_ms: int = 0
     steps_completed: int = 0
     steps_failed: int = 0
+    parallel_metrics: Optional[Dict[str, Any]] = None
     
     def __repr__(self) -> str:
         """String representation."""
@@ -231,7 +238,9 @@ class QueryExecutor:
     def __init__(
         self,
         tool_registry: Optional[ToolRegistry] = None,
-        use_real_tools: bool = False
+        use_real_tools: bool = False,
+        enable_parallel: bool = True,
+        max_workers: int = 4
     ):
         """
         Initialize executor.
@@ -239,12 +248,17 @@ class QueryExecutor:
         Args:
             tool_registry: Registry of available tools. If None, creates default.
             use_real_tools: If True and no registry provided, use real tool implementations.
+            enable_parallel: Enable parallel execution of independent steps (default: True)
+            max_workers: Maximum number of parallel workers (default: 4)
         """
         if tool_registry is None:
             self.registry = ToolRegistry(use_real_tools=use_real_tools)
         else:
             self.registry = tool_registry
         self._execution_context: Dict[str, Any] = {}
+        self.enable_parallel = enable_parallel
+        self.parallel_executor = ParallelExecutor(max_workers=max_workers) if enable_parallel else None
+        self.metrics = ExecutionMetrics()
     
     def execute(self, plan: QueryPlan) -> ExecutionResult:
         """
@@ -262,37 +276,70 @@ class QueryExecutor:
             ...     print(result.final_output)
         """
         self._execution_context = {}  # Reset context
+        self.metrics = ExecutionMetrics()  # Reset metrics
         step_results = []
         start_time = datetime.now()
         
         try:
             # Get parallel execution groups
             groups = plan.get_parallel_groups()
+            self.metrics.total_steps = len(plan.steps)
+            self.metrics.parallel_groups = len(groups)
             
             # Execute each group
             for group in groups:
-                # For now, execute sequentially (parallel execution TBD)
-                for step in group:
-                    step_result = self._execute_step(step)
-                    step_results.append(step_result)
-                    
-                    # Store output in context
-                    if step_result.status == ExecutionStatus.COMPLETED:
-                        self._execution_context[step.output_name] = step_result.output
-                    
-                    # Stop on failure
-                    if step_result.status == ExecutionStatus.FAILED:
-                        end_time = datetime.now()
-                        duration = int((end_time - start_time).total_seconds() * 1000)
+                group_start = datetime.now()
+                
+                if self.enable_parallel and len(group) > 1:
+                    # Execute group in parallel
+                    self.metrics.steps_parallelized += len(group)
+                    group_results = self.parallel_executor.execute_group_parallel(
+                        group,
+                        self._execute_step,
+                        self._execution_context
+                    )
+                else:
+                    # Execute serially
+                    group_results = []
+                    for step in group:
+                        step_result = self._execute_step(step)
+                        group_results.append(step_result)
                         
-                        return ExecutionResult(
-                            status=ExecutionStatus.FAILED,
-                            step_results=step_results,
-                            error=f"Step {step.step_id} failed: {step_result.error}",
-                            total_duration_ms=duration,
-                            steps_completed=sum(1 for r in step_results if r.status == ExecutionStatus.COMPLETED),
-                            steps_failed=sum(1 for r in step_results if r.status == ExecutionStatus.FAILED)
-                        )
+                        # Store output in context
+                        if step_result.status == ExecutionStatus.COMPLETED:
+                            self._execution_context[step.output_name] = step_result.output
+                
+                step_results.extend(group_results)
+                
+                group_end = datetime.now()
+                group_time = int((group_end - group_start).total_seconds() * 1000)
+                
+                # Update metrics
+                if len(group) > 1:
+                    # Estimate serial time (sum of individual step times)
+                    serial_time = sum(r.duration_ms for r in group_results)
+                    self.metrics.serial_time_ms += serial_time
+                    self.metrics.parallel_time_ms += group_time
+                else:
+                    # Single step - same for both
+                    self.metrics.serial_time_ms += group_time
+                    self.metrics.parallel_time_ms += group_time
+                
+                # Stop on failure
+                failed_result = next((r for r in group_results if r.status == ExecutionStatus.FAILED), None)
+                if failed_result:
+                    end_time = datetime.now()
+                    duration = int((end_time - start_time).total_seconds() * 1000)
+                    
+                    return ExecutionResult(
+                        status=ExecutionStatus.FAILED,
+                        step_results=step_results,
+                        error=f"Step {failed_result.step_id} failed: {failed_result.error}",
+                        total_duration_ms=duration,
+                        steps_completed=sum(1 for r in step_results if r.status == ExecutionStatus.COMPLETED),
+                        steps_failed=sum(1 for r in step_results if r.status == ExecutionStatus.FAILED),
+                        parallel_metrics=self.metrics.to_dict() if self.enable_parallel else None
+                    )
             
             # All steps completed successfully
             end_time = datetime.now()
@@ -307,7 +354,8 @@ class QueryExecutor:
                 final_output=final_output,
                 total_duration_ms=duration,
                 steps_completed=len(step_results),
-                steps_failed=0
+                steps_failed=0,
+                parallel_metrics=self.metrics.to_dict() if self.enable_parallel else None
             )
         
         except Exception as e:
@@ -345,6 +393,7 @@ class QueryExecutor:
             if not tool:
                 return StepResult(
                     step_id=step.step_id,
+                    tool_name=step.tool_name,
                     status=ExecutionStatus.FAILED,
                     error=f"Tool not found: {step.tool_name}",
                     start_time=start_time,
@@ -359,6 +408,7 @@ class QueryExecutor:
             
             return StepResult(
                 step_id=step.step_id,
+                tool_name=step.tool_name,
                 status=ExecutionStatus.COMPLETED,
                 output=output,
                 start_time=start_time,
@@ -372,6 +422,7 @@ class QueryExecutor:
             
             return StepResult(
                 step_id=step.step_id,
+                tool_name=step.tool_name,
                 status=ExecutionStatus.FAILED,
                 error=str(e),
                 start_time=start_time,

@@ -36,13 +36,17 @@ class QueryRequest(BaseModel):
     query: str = Field(..., description="Natural language query", min_length=1, max_length=500)
     use_cache: bool = Field(True, description="Enable result caching")
     verbose: bool = Field(False, description="Include execution details")
+    enable_parallel: bool = Field(True, description="Enable parallel execution for independent steps")
+    max_workers: int = Field(4, description="Maximum parallel workers", ge=1, le=16)
     
     class Config:
         json_schema_extra = {
             "example": {
                 "query": "What is CHEMBL25?",
                 "use_cache": True,
-                "verbose": False
+                "verbose": False,
+                "enable_parallel": True,
+                "max_workers": 4
             }
         }
 
@@ -197,7 +201,11 @@ class ChemAgentState:
                 self.cache = ResultCache(cache_dir=cache_dir, ttl=cache_ttl)
                 add_caching_to_registry(registry, self.cache)
             
-            self.executor = QueryExecutor(registry)
+            self.executor = QueryExecutor(
+                registry, 
+                enable_parallel=True,
+                max_workers=4
+            )
             self.initialized = True
             
         except Exception as e:
@@ -283,10 +291,17 @@ async def process_query(request: QueryRequest):
         parsed = state.parser.parse(request.query)
         
         # Plan execution
-        plan = state.planner.create_plan(parsed)
+        plan = state.planner.plan(parsed)
+        
+        # Create executor with request settings
+        executor = QueryExecutor(
+            state.executor.tool_registry,
+            enable_parallel=request.enable_parallel,
+            max_workers=request.max_workers
+        )
         
         # Execute
-        result = state.executor.execute(plan)
+        result = executor.execute(plan)
         
         execution_time = (time.time() - start_time) * 1000
         
@@ -318,6 +333,7 @@ async def process_query(request: QueryRequest):
                         for step in plan.steps
                     ]
                 },
+                "parallel_metrics": result.parallel_metrics,
                 "cache_stats": state.cache.get_statistics() if state.cache else None
             }
         

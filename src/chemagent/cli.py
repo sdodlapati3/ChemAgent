@@ -37,7 +37,9 @@ class ChemAgentCLI:
         use_real_tools: bool = True,
         verbose: bool = False,
         use_cache: bool = True,
-        cache_ttl: int = 3600
+        cache_ttl: int = 3600,
+        enable_parallel: bool = True,
+        max_workers: int = 4
     ):
         """
         Initialize CLI.
@@ -47,13 +49,19 @@ class ChemAgentCLI:
             verbose: Show detailed execution information
             use_cache: Enable result caching
             cache_ttl: Cache TTL in seconds
+            enable_parallel: Enable parallel execution
+            max_workers: Maximum parallel workers
         """
         self.parser = IntentParser()
         self.planner = QueryPlanner()
         
         # Create executor with optional caching
         registry = ToolRegistry(use_real_tools=use_real_tools)
-        self.executor = QueryExecutor(tool_registry=registry)
+        self.executor = QueryExecutor(
+            tool_registry=registry,
+            enable_parallel=enable_parallel,
+            max_workers=max_workers
+        )
         
         self.cache = None
         if use_cache:
@@ -105,6 +113,20 @@ class ChemAgentCLI:
         print(f"\n📊 Results:")
         print(f"   Status: {result.status.value}")
         print(f"   Duration: {result.total_duration_ms}ms")
+        
+        # Show parallel execution metrics if available
+        if self.verbose and result.parallel_metrics:
+            metrics = result.parallel_metrics
+            # Metrics values might be formatted strings or numbers
+            speedup = metrics.get('speedup', '1.00x')
+            parallelized = metrics.get('steps_parallelized', 0)
+            total = metrics.get('total_steps', 0)
+            ratio = metrics.get('parallelization_ratio', '0.0%')
+            
+            print(f"\n   ⚡ Parallel Execution:")
+            print(f"   - Speedup: {speedup}")
+            print(f"   - Steps parallelized: {parallelized}/{total}")
+            print(f"   - Parallelization ratio: {ratio}")
         
         # Show cache stats if enabled
         if self.use_cache and self.verbose:
@@ -407,6 +429,19 @@ Examples:
     )
     
     parser.add_argument(
+        "--no-parallel",
+        action="store_true",
+        help="Disable parallel execution for independent steps"
+    )
+    
+    parser.add_argument(
+        "--max-workers",
+        type=int,
+        default=4,
+        help="Maximum parallel workers (default: 4, range: 1-16)"
+    )
+    
+    parser.add_argument(
         "--version",
         action="version",
         version="ChemAgent 1.0.0"
@@ -419,7 +454,9 @@ Examples:
         use_real_tools=not args.no_api,
         verbose=args.verbose,
         use_cache=not args.no_cache,
-        cache_ttl=args.cache_ttl
+        cache_ttl=args.cache_ttl,
+        enable_parallel=not args.no_parallel,
+        max_workers=args.max_workers
     )
     
     # Run

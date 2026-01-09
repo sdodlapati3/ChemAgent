@@ -37,7 +37,7 @@ class ParallelExecutionBenchmark:
         
         # Parse and plan once
         parsed = self.parser.parse(query)
-        plan = self.planner.create_plan(parsed)
+        plan = self.planner.plan(parsed)
         
         print(f"Intent: {parsed.intent_type.value}")
         print(f"Steps: {len(plan.steps)}")

@@ -35,6 +35,8 @@ class ResultCache:
         """
         if cache_dir is None:
             cache_dir = Path.home() / ".chemagent" / "cache"
+        else:
+            cache_dir = Path(cache_dir)  # Convert string to Path if needed
         
         cache_dir.mkdir(parents=True, exist_ok=True)
         

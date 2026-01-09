@@ -131,6 +131,16 @@ class ToolRegistry:
         """
         return self._tools.get(name)
     
+    @property
+    def tools(self) -> Dict[str, Callable]:
+        """
+        Get all registered tools.
+        
+        Returns:
+            Dictionary of tool names to functions
+        """
+        return self._tools
+    
     def has(self, name: str) -> bool:
         """
         Check if tool exists.

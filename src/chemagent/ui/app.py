@@ -8,8 +8,8 @@ from typing import Any, Dict, List, Optional, Tuple
 
 import gradio as gr
 
-from ..agent import ChemAgent
-from ..config import get_config
+from chemagent import ChemAgent
+from chemagent.config import get_config
 from .history import HistoryManager
 from .visualizer import ResultVisualizer
 

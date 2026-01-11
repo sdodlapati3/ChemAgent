@@ -7,8 +7,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, Dict, List, Optional
 
-from ..agent import ChemAgent
-from ..config import get_config
+from chemagent import ChemAgent
+from chemagent.config import get_config
 
 logger = logging.getLogger(__name__)
 

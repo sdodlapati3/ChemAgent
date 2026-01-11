@@ -176,21 +176,30 @@ class ChEMBLTools:
             Activity data
         """
         try:
-            activities = self.client.get_compound_activities(chembl_id)
+            activities = self.client.get_activities(chembl_id, target_type=target)
             
-            # Filter by target if specified
-            if target and activities:
-                activities = [
-                    a for a in activities
-                    if target.lower() in a.get("target_pref_name", "").lower()
-                ]
+            # Convert ActivityResult objects to dicts for JSON serialization
+            activity_dicts = []
+            for act in activities:
+                activity_dicts.append({
+                    "activity_id": act.activity_id,
+                    "chembl_id": act.chembl_id,
+                    "target_chembl_id": act.target_chembl_id,
+                    "target_name": act.target_name,
+                    "target_pref_name": act.target_name,  # Alias for compatibility
+                    "assay_type": act.assay_type,
+                    "standard_type": act.standard_type,
+                    "standard_value": act.standard_value,
+                    "standard_units": act.standard_units,
+                    "pchembl_value": act.pchembl_value,
+                })
             
             return {
                 "status": "success",
                 "chembl_id": chembl_id,
                 "target": target,
-                "activities": activities,
-                "count": len(activities)
+                "activities": activity_dicts,
+                "count": len(activity_dicts)
             }
         except Exception as e:
             return {
@@ -336,6 +345,7 @@ class RDKitToolsWrapper:
                 },
                 "passes_lipinski": result.passes,
                 "violations": result.violations,
+                "details": result.details,  # Add violation details list
                 # Flatten for easy access
                 "molecular_weight": result.molecular_weight,
                 "logp": result.logp,

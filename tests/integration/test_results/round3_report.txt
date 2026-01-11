@@ -1,0 +1,77 @@
+
+======================================================================
+COMPREHENSIVE TEST REPORT - ROUND 3
+======================================================================
+
+Overall Results:
+  Total Queries:    478
+  Successful:       460 (96.2%)
+  Failed:           18 (3.8%)
+
+Performance Metrics:
+  Average Time:     312.08ms
+  Min Time:         0.00ms
+  Max Time:         31421.57ms
+  
+Cache Statistics:
+  Cached Results:   0 (0.0%)
+  Fresh Queries:    478 (100.0%)
+
+Reliability Metrics:
+  Timeouts:         0
+  Retries Used:     0
+  
+Intent Recognition:
+  compound_lookup            117 queries (100% success)
+  property_calculation        78 queries (96% success)
+  similarity_search           76 queries (93% success)
+  lipinski_check              66 queries (95% success)
+  target_lookup               46 queries (100% success)
+  unknown                     34 queries (94% success)
+  activity_lookup             22 queries (100% success)
+  comparison                  22 queries (77% success)
+  structure_conversion        14 queries (100% success)
+  substructure_search          3 queries (100% success)
+
+  Intent Accuracy:  88.9% (425/478)
+
+Slowest Queries (Top 10):
+   1. ✓   31422ms - What is the IC50 of simvastatin?
+   2. ✓   30677ms - Get compound CHEMBL192
+   3. ✓   22203ms - What is the IC50 of codeine?
+   4. ✓    9674ms - What are the differences between lipitor and simva
+   5. ✓    4319ms - Search for analogs of sildenafil
+   6. ✓    3678ms - What is the IC50 of paracetamol?
+   7. ✓    3553ms - What is the IC50 of fluoxetine?
+   8. ✓    3457ms - What is the IC50 of prozac?
+   9. ✓    3296ms - What is the IC50 of diazepam?
+  10. ✓    3269ms - What is the IC50 of morphine?
+
+Error Analysis (by type):
+  Empty query provided                        2 occurrences
+    Example: "..."
+    → Empty query provided...
+
+Sample Failed Queries (first 10):
+  [24] Find similar compounds to insulin...
+      Error: None
+  [31] Calculate properties of insulin...
+      Error: None
+  [95] Compare metformin and insulin...
+      Error: None
+  [129] ...
+      Error: Empty query provided
+  [161] Is insulin drug-like?...
+      Error: None
+  [211] Does insulin follow Ro5?...
+      Error: None
+  [255] What compounds are similar to insulin?...
+      Error: None
+  [288] Compare INVALID1 and INVALID2...
+      Error: None
+  [342] Get molecular weight of insulin...
+      Error: None
+  [359] metformin vs insulin...
+      Error: None
+
+======================================================================

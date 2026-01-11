@@ -323,8 +323,12 @@ class ResponseFormatter:
             answer += "✅ **PASS** - Compound satisfies all Lipinski criteria\n\n"
         else:
             answer += "❌ **FAIL** - Compound violates Lipinski rules\n\n"
-            if violations:
-                answer += f"**Violations:** {', '.join(violations)}\n\n"
+            # violations is an integer count; details is the list
+            violation_details = data.get("details", [])
+            if isinstance(violation_details, list) and violation_details:
+                answer += f"**Violations:** {', '.join(violation_details)}\n\n"
+            elif isinstance(violations, int) and violations > 0:
+                answer += f"**Violations:** {violations} rule(s) violated\n\n"
         
         answer += "### Parameters\n\n"
         

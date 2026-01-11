@@ -596,8 +596,8 @@ class QueryPlanner:
         if compound_ref:
             activity_args = {"chembl_id": compound_ref}
             if "activity_type" in entities:
-                # Map activity_type to target_type for the tool
-                activity_args["target_type"] = entities["activity_type"]
+                # Map activity_type to target parameter for the tool
+                activity_args["target"] = entities["activity_type"]
             
             activity_step = PlanStep(
                 step_id=self._next_step_id(),

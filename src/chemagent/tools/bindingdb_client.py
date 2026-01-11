@@ -139,7 +139,9 @@ class BindingDBClient:
                 else:
                     logger.error(f"All {self.max_retries} attempts failed: {e}")
         
-        raise last_exception
+        if last_exception is not None:
+            raise last_exception
+        raise RuntimeError("Request failed after all retries")
     
     def _create_provenance(self, method: str, **params) -> Provenance:
         """Create provenance record."""

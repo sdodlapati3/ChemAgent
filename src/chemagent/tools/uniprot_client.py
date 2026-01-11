@@ -140,7 +140,9 @@ class UniProtClient:
                 else:
                     logger.error(f"All {self.max_retries} attempts failed: {e}")
         
-        raise last_exception
+        if last_exception is not None:
+            raise last_exception
+        raise RuntimeError(f"Failed to execute request after {self.max_retries} attempts")
     
     def _create_provenance(self, method: str, **params) -> Provenance:
         """Create provenance record."""

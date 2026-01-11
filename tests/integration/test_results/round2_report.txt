@@ -1,0 +1,80 @@
+
+======================================================================
+COMPREHENSIVE TEST REPORT - ROUND 2
+======================================================================
+
+Overall Results:
+  Total Queries:    399
+  Successful:       362 (90.7%)
+  Failed:           37 (9.3%)
+
+Performance Metrics:
+  Average Time:     103.57ms
+  Min Time:         0.00ms
+  Max Time:         31355.66ms
+  
+Cache Statistics:
+  Cached Results:   0 (0.0%)
+  Fresh Queries:    399 (100.0%)
+
+Reliability Metrics:
+  Timeouts:         0
+  Retries Used:     0
+  
+Intent Recognition:
+  compound_lookup             87 queries (100% success)
+  similarity_search           76 queries (93% success)
+  property_calculation        75 queries (96% success)
+  target_lookup               46 queries (100% success)
+  lipinski_check              34 queries (97% success)
+  unknown                     27 queries (70% success)
+  comparison                  22 queries (73% success)
+  activity_lookup             15 queries (7% success)
+  structure_conversion        14 queries (100% success)
+  substructure_search          3 queries (100% success)
+
+  Intent Accuracy:  90.2% (360/399)
+
+Slowest Queries (Top 10):
+   1. ✗   31356ms - Compare molecular weight of viagra and cialis
+   2. ✓    1439ms - Find similar compounds to sildenafil
+   3. ✓     985ms - Find similar compounds to viagra
+   4. ✓     918ms - What is CHEMBL370?
+   5. ✓     801ms - Find similar compounds to simvastatin
+   6. ✗     773ms - Compare INVALID1 and INVALID2
+   7. ✓     755ms - Find similar compounds to cocaine
+   8. ✓     714ms - Find similar compounds to atorvastatin
+   9. ✓     600ms - Get compound CHEMBL113
+  10. ✓     582ms - What is CHEMBL1771?
+
+Error Analysis (by type):
+  can only join an iterable                   6 occurrences
+    Example: "Is viagra drug-like?..."
+    → can only join an iterable...
+  Empty query provided                        2 occurrences
+    Example: "   ..."
+    → Empty query provided...
+
+Sample Failed Queries (first 10):
+  [1] What is the IC50 of lipitor?...
+      Error: None
+  [23] Compare molecular weight of viagra and cialis...
+      Error: None
+  [36] Compare metformin and insulin...
+      Error: None
+  [43] What is the IC50 of ibuprofen?...
+      Error: None
+  [54] What is the IC50 of prozac?...
+      Error: None
+  [58]    ...
+      Error: Empty query provided
+  [59] ...
+      Error: Empty query provided
+  [60] Get similar compounds to CHEMBL25 with similarity > 0.8 and ...
+      Error: None
+  [65] Is viagra drug-like?...
+      Error: can only join an iterable
+  [67] What is the IC50 of morphine?...
+      Error: None
+
+======================================================================

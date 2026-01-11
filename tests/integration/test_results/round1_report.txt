@@ -1,0 +1,73 @@
+
+======================================================================
+COMPREHENSIVE TEST REPORT - ROUND 1
+======================================================================
+
+Overall Results:
+  Total Queries:    98
+  Successful:       90 (91.8%)
+  Failed:           8 (8.2%)
+
+Performance Metrics:
+  Average Time:     277.97ms
+  Min Time:         0.00ms
+  Max Time:         21711.86ms
+  
+Cache Statistics:
+  Cached Results:   0 (0.0%)
+  Fresh Queries:    98 (100.0%)
+
+Reliability Metrics:
+  Timeouts:         0
+  Retries Used:     0
+  
+Intent Recognition:
+  similarity_search           18 queries (89% success)
+  property_calculation        16 queries (100% success)
+  compound_lookup             14 queries (100% success)
+  comparison                  11 queries (82% success)
+  target_lookup               11 queries (100% success)
+  lipinski_check              10 queries (100% success)
+  unknown                      9 queries (78% success)
+  structure_conversion         5 queries (100% success)
+  substructure_search          2 queries (100% success)
+  activity_lookup              2 queries (0% success)
+
+  Intent Accuracy:  88.8% (87/98)
+
+Slowest Queries (Top 10):
+   1. ✓   21712ms - What are the differences between caffeine and coca
+   2. ✓    1957ms - Search for analogs of lipitor
+   3. ✓    1251ms - What compounds are similar to fluoxetine?
+   4. ✓     996ms - Find similar compounds to prozac
+   5. ✓     731ms - What is simvastatin?
+   6. ✓      32ms - Calculate properties of penicillin
+   7. ✓      22ms - aspirin vs ibuprofen
+   8. ✓      22ms - What are the differences between aspirin and ibupr
+   9. ✓      20ms - Compare properties of aspirin and ibuprofen and ch
+  10. ✓      20ms - Compare molecular weight of aspirin and ibuprofen
+
+Error Analysis (by type):
+  Empty query provided                        2 occurrences
+    Example: "..."
+    → Empty query provided...
+
+Sample Failed Queries (first 10):
+  [1] Get similar compounds to CHEMBL25 with similarity > 0.8 and ...
+      Error: None
+  [2] Find similar compounds to NONEXISTENT...
+      Error: None
+  [15] ...
+      Error: Empty query provided
+  [17] Compare metformin and insulin...
+      Error: None
+  [74] What is the IC50 of metformin?...
+      Error: None
+  [89] What is the IC50 of caffeine?...
+      Error: None
+  [94] Compare molecular weight of metformin and insulin...
+      Error: None
+  [95]    ...
+      Error: Empty query provided
+
+======================================================================

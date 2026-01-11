@@ -31,7 +31,7 @@ class HistoryManager:
         
         Args:
             query: Query text
-            result: Query result
+            result: Query result (QueryResult dataclass or dict)
             execution_time: Execution time in seconds
             cached: Whether result was cached
             
@@ -40,10 +40,25 @@ class HistoryManager:
         """
         query_id = str(uuid.uuid4())
         
+        # Convert QueryResult to dict for JSON serialization
+        if hasattr(result, '__dict__'):
+            # It's a dataclass, convert to dict
+            result_dict = {
+                "answer": result.answer,
+                "success": result.success,
+                "error": result.error,
+                "intent_type": result.intent_type,
+                "execution_time_ms": result.execution_time_ms,
+                "steps_taken": result.steps_taken,
+                "cached": result.cached
+            }
+        else:
+            result_dict = result
+        
         history_item = {
             "id": query_id,
             "query": query,
-            "result": result,
+            "result": result_dict,
             "execution_time": execution_time,
             "cached": cached,
             "timestamp": datetime.now().isoformat(),

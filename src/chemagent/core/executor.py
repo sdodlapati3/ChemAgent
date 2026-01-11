@@ -362,8 +362,20 @@ class QueryExecutor:
             end_time = datetime.now()
             duration = int((end_time - start_time).total_seconds() * 1000)
             
-            # Get final output from last step
-            final_output = step_results[-1].output if step_results else None
+            # Get final output - for comparison queries, return all outputs
+            # Check if this is a comparison by looking for multiple property outputs
+            is_comparison = any(
+                key.startswith("properties_") for key in self._execution_context.keys()
+            ) and sum(
+                1 for key in self._execution_context.keys() if key.startswith("properties_")
+            ) > 1
+            
+            if is_comparison:
+                # Return all execution context for comparison formatting
+                final_output = dict(self._execution_context)
+            else:
+                # Normal case: return last step's output
+                final_output = step_results[-1].output if step_results else None
             
             return ExecutionResult(
                 status=ExecutionStatus.COMPLETED,
@@ -489,13 +501,17 @@ class QueryExecutor:
         Raises:
             ValueError: If variable not found
         """
-        # Parse variable reference
-        match = re.match(r"\$([^.]+)(?:\.(.+))?", var_ref)
+        # Parse variable reference with array indexing anywhere in path
+        # Supports: $var, $var.field, $var[0], $var.field[0], $var.field[0].sub
+        import re
+        
+        # Get variable name
+        match = re.match(r"\$([^.\[]+)", var_ref)
         if not match:
             raise ValueError(f"Invalid variable reference: {var_ref}")
         
         var_name = match.group(1)
-        field_path = match.group(2)
+        rest = var_ref[len(var_name) + 1:]  # Skip $ and var_name
         
         # Get base value from context
         if var_name not in self._execution_context:
@@ -503,9 +519,13 @@ class QueryExecutor:
         
         value = self._execution_context[var_name]
         
-        # Navigate field path if present
-        if field_path:
-            for field in field_path.split("."):
+        # Parse path segments (fields and array indices)
+        # Matches: .field, [0], .field[0]
+        segments = re.findall(r'\.([^.\[]+)|\[(\d+)\]', rest)
+        
+        for field, index in segments:
+            if field:
+                # Field access
                 if isinstance(value, dict):
                     if field not in value:
                         raise ValueError(f"Field not found: {field} in {var_name}")
@@ -513,7 +533,16 @@ class QueryExecutor:
                 elif hasattr(value, field):
                     value = getattr(value, field)
                 else:
-                    raise ValueError(f"Cannot access field: {field} in {var_name}")
+                    raise ValueError(f"Cannot access field: {field} in value")
+            elif index:
+                # Array indexing
+                idx = int(index)
+                if isinstance(value, (list, tuple)):
+                    if idx >= len(value):
+                        raise ValueError(f"Index {idx} out of range")
+                    value = value[idx]
+                else:
+                    raise ValueError(f"Cannot index non-list value: {type(value)}")
         
         return value
     

@@ -6,35 +6,39 @@ from typing import Any, Dict, List
 class ResultVisualizer:
     """Visualize query results with HTML/CSS."""
     
-    def visualize(self, result: Dict[str, Any]) -> str:
+    def visualize(self, result) -> str:
         """Generate HTML visualization of result.
         
         Args:
-            result: Query result dictionary
+            result: QueryResult dataclass
             
         Returns:
             HTML string for visualization
         """
-        if not result or not result.get("success"):
+        if not result or not result.success:
             return self._error_viz(result)
         
-        intent_type = result.get("intent_type", "unknown")
+        intent_type = result.intent_type or "unknown"
+        
+        # Skip visualization for comparison queries (formatted answer is sufficient)
+        if "comparison" in intent_type.lower():
+            return ""
         
         # Route to appropriate visualizer
-        if intent_type == "compound_lookup":
+        if "compound" in intent_type.lower():
             return self._compound_viz(result)
-        elif intent_type == "property_query":
+        elif "property" in intent_type.lower():
             return self._property_viz(result)
-        elif intent_type == "similarity_search":
+        elif "similarity" in intent_type.lower():
             return self._similarity_viz(result)
-        elif intent_type == "target_query":
+        elif "target" in intent_type.lower():
             return self._target_viz(result)
         else:
             return self._generic_viz(result)
     
-    def _error_viz(self, result: Dict[str, Any]) -> str:
+    def _error_viz(self, result) -> str:
         """Visualize error result."""
-        error = result.get("error", "Unknown error")
+        error = result.error if result else "Unknown error"
         return f"""
         <div style="padding: 20px; background: #ffebee; border-left: 4px solid #f44336; border-radius: 4px;">
             <h3 style="color: #c62828; margin-top: 0;">❌ Error</h3>
@@ -42,9 +46,9 @@ class ResultVisualizer:
         </div>
         """
     
-    def _compound_viz(self, result: Dict[str, Any]) -> str:
+    def _compound_viz(self, result) -> str:
         """Visualize compound lookup result."""
-        data = result.get("result", {})
+        data = result.raw_output
         
         if not data:
             return "<p>No compound data available.</p>"
@@ -93,9 +97,9 @@ class ResultVisualizer:
         
         return html
     
-    def _property_viz(self, result: Dict[str, Any]) -> str:
+    def _property_viz(self, result) -> str:
         """Visualize property query result."""
-        data = result.get("result", {})
+        data = result.raw_output if result else {}
         
         html = f"""
         <div style="padding: 20px; background: #f5f5f5; border-radius: 8px;">
@@ -129,9 +133,9 @@ class ResultVisualizer:
         
         return html
     
-    def _similarity_viz(self, result: Dict[str, Any]) -> str:
+    def _similarity_viz(self, result) -> str:
         """Visualize similarity search results."""
-        data = result.get("result", {})
+        data = result.raw_output if result else {}
         
         if isinstance(data, list):
             compounds = data[:10]  # Show top 10
@@ -171,9 +175,9 @@ class ResultVisualizer:
         
         return html
     
-    def _target_viz(self, result: Dict[str, Any]) -> str:
+    def _target_viz(self, result) -> str:
         """Visualize target query results."""
-        data = result.get("result", {})
+        data = result.raw_output if result else {}
         
         if isinstance(data, list):
             targets = data
@@ -220,9 +224,9 @@ class ResultVisualizer:
         </div>
         """
     
-    def _generic_viz(self, result: Dict[str, Any]) -> str:
+    def _generic_viz(self, result) -> str:
         """Generic visualization for unknown result types."""
-        data = result.get("result", {})
+        data = result.raw_output if result else {}
         
         html = f"""
         <div style="padding: 20px; background: #f5f5f5; border-radius: 8px;">

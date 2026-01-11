@@ -34,7 +34,7 @@ class ChEMBLTools:
             Search results with compounds
         """
         try:
-            results = self.client.search_compounds(query, limit=limit)
+            results = self.client.search_by_name(query, limit=limit)
             return {
                 "status": "success",
                 "compounds": results,

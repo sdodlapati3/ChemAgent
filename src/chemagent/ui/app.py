@@ -51,7 +51,7 @@ class ChemAgentUI:
         # Process query
         start_time = time.time()
         try:
-            result = self.agent.process_query(
+            result = self.agent.query(
                 query,
                 use_cache=use_cache,
                 verbose=verbose
@@ -63,12 +63,12 @@ class ChemAgentUI:
                 query=query,
                 result=result,
                 execution_time=execution_time,
-                cached=result.get("cached", False)
+                cached=result.cached
             )
             
             # Format results
             status_html = self._format_status(
-                "success" if result.get("success") else "error",
+                "success" if result.success else "error",
                 f"Query completed in {execution_time:.2f}s"
             )
             
@@ -118,17 +118,17 @@ class ChemAgentUI:
         
         for i, query in enumerate(queries, 1):
             try:
-                result = self.agent.process_query(
+                result = self.agent.query(
                     query,
                     use_cache=use_cache
                 )
                 
-                if result.get("success"):
+                if result.success:
                     successful += 1
                 
                 results.append({
                     "query": query,
-                    "success": result.get("success"),
+                    "success": result.success,
                     "result": result
                 })
                 
@@ -137,7 +137,7 @@ class ChemAgentUI:
                     query=query,
                     result=result,
                     execution_time=0,
-                    cached=result.get("cached", False)
+                    cached=result.cached
                 )
                 
             except Exception as e:
@@ -234,50 +234,55 @@ class ChemAgentUI:
         </div>
         """
     
-    def _format_result(self, result: Dict[str, Any], verbose: bool) -> str:
+    def _format_result(self, result, verbose: bool) -> str:
         """Format query result as readable text."""
         if not result:
             return "No results."
         
+        # Handle QueryResult dataclass
+        from chemagent import QueryResult
+        
         lines = []
-        lines.append("=" * 80)
+        
+        # Show the query
+        if result.query:
+            lines.append(f"Query: {result.query}")
+            lines.append("")
+        
         lines.append("QUERY RESULT")
-        lines.append("=" * 80)
+        lines.append("-" * 80)
         
         # Basic info
-        lines.append(f"Success: {result.get('success', False)}")
-        lines.append(f"Intent: {result.get('intent_type', 'unknown')}")
+        lines.append(f"Success: {result.success}")
+        lines.append(f"Intent: {result.intent_type or 'unknown'}")
+        lines.append(f"Execution Time: {result.execution_time_ms:.2f}ms")
+        lines.append(f"Steps: {result.steps_taken}")
         
-        if result.get("cached"):
+        if result.cached:
             lines.append("✓ Result from cache")
         
         lines.append("")
         
-        # Main result
-        if "result" in result:
-            lines.append("RESULT:")
+        # Main answer
+        if result.answer:
+            lines.append("ANSWER:")
             lines.append("-" * 80)
-            lines.append(json.dumps(result["result"], indent=2))
+            lines.append(result.answer)
             lines.append("")
         
         # Error
-        if result.get("error"):
+        if result.error:
             lines.append("ERROR:")
             lines.append("-" * 80)
-            lines.append(result["error"])
+            lines.append(result.error)
             lines.append("")
         
         # Verbose details
-        if verbose and "steps" in result:
-            lines.append("EXECUTION STEPS:")
+        if verbose and result.provenance:
+            lines.append("PROVENANCE:")
             lines.append("-" * 80)
-            for i, step in enumerate(result["steps"], 1):
-                lines.append(f"\n{i}. {step.get('name', 'Unknown step')}")
-                lines.append(f"   Status: {step.get('status', 'unknown')}")
-                if step.get("duration"):
-                    lines.append(f"   Duration: {step['duration']:.3f}s")
-        
-        lines.append("=" * 80)
+            for item in result.provenance:
+                lines.append(f"  • {item}")
         
         return "\n".join(lines)
     
@@ -379,9 +384,8 @@ def create_app() -> gr.Blocks:
                 
                 with gr.Row():
                     with gr.Column(scale=2):
-                        result_output = gr.Textbox(
+                        result_output = gr.Markdown(
                             label="Results",
-                            lines=20,
                             elem_classes=["result-box"]
                         )
                     
@@ -408,9 +412,8 @@ def create_app() -> gr.Blocks:
                         batch_parallel = gr.Checkbox(label="Enable parallel", value=True)
                 
                 batch_status = gr.HTML(label="Status")
-                batch_results = gr.Textbox(
+                batch_results = gr.Markdown(
                     label="Batch Results",
-                    lines=20,
                     elem_classes=["result-box"]
                 )
             

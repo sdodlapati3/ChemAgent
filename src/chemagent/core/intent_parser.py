@@ -36,6 +36,7 @@ class IntentType(Enum):
     # Analysis intents
     SCAFFOLD_ANALYSIS = "scaffold_analysis"
     BATCH_ANALYSIS = "batch_analysis"
+    COMPARISON = "comparison"
     
     # Unknown/fallback
     UNKNOWN = "unknown"
@@ -267,6 +268,54 @@ class IntentParser:
             ),
             
             # ============================================================
+            # COMPARISON (5 patterns)
+            # ============================================================
+            (
+                r"compare.*(properties|property|molecular weight|mw|logp|structure).*(of|for|between)",
+                {"intent": IntentType.COMPARISON, "entity_extractors": ["compounds", "property_name"]}
+            ),
+            (
+                r"(difference|differences).*(between|in).*(properties|property|molecular weight|mw|logp)",
+                {"intent": IntentType.COMPARISON, "entity_extractors": ["compounds", "property_name"]}
+            ),
+            (
+                r"(\w+)\s+(vs|versus|compared to|compared with)\s+(\w+)",
+                {"intent": IntentType.COMPARISON, "entity_extractors": ["compounds"]}
+            ),
+            (
+                r"compare\s+(\w+)\s+(?:and|with|to)\s+(\w+)",
+                {"intent": IntentType.COMPARISON, "entity_extractors": ["compounds"]}
+            ),
+            (
+                r"(?:how|what).*(?:different|differ).*(\w+).*(?:and|from)\s+(\w+)",
+                {"intent": IntentType.COMPARISON, "entity_extractors": ["compounds"]}
+            ),
+            
+            # ============================================================
+            # COMPARISON (5 patterns)
+            # ============================================================
+            (
+                r"compare.*(properties|property|molecular weight|mw|logp|structure).*(of|for|between)",
+                {"intent": IntentType.COMPARISON, "entity_extractors": ["compounds", "property_name"]}
+            ),
+            (
+                r"(difference|differences).*(between|in).*(properties|property|molecular weight|mw|logp)",
+                {"intent": IntentType.COMPARISON, "entity_extractors": ["compounds", "property_name"]}
+            ),
+            (
+                r"(\w+)\s+(vs|versus|compared to|compared with)\s+(\w+)",
+                {"intent": IntentType.COMPARISON, "entity_extractors": ["compounds"]}
+            ),
+            (
+                r"compare\s+(\w+)\s+(?:and|with|to)\s+(\w+)",
+                {"intent": IntentType.COMPARISON, "entity_extractors": ["compounds"]}
+            ),
+            (
+                r"(?:how|what).*(?:different|differ).*(\w+).*(?:and|from)\s+(\w+)",
+                {"intent": IntentType.COMPARISON, "entity_extractors": ["compounds"]}
+            ),
+            
+            # ============================================================
             # PROPERTY CALCULATION (9 patterns)
             # ============================================================
             (
@@ -445,6 +494,10 @@ class IntentParser:
                 if compound := self._extract_compound(query, query_lower):
                     entities["compound"] = compound
             
+            elif extractor == "compounds":
+                if compounds := self._extract_compounds(query, query_lower):
+                    entities["compounds"] = compounds
+            
             elif extractor == "chembl_id":
                 if chembl_id := self._extract_chembl_id(query):
                     entities["chembl_id"] = chembl_id
@@ -530,6 +583,37 @@ class IntentParser:
             return match.group(1)
         
         return None
+    
+    def _extract_compounds(self, query: str, query_lower: str) -> Optional[List[str]]:
+        """Extract multiple compound names from comparison query."""
+        # Common drug names
+        common_drugs = [
+            "aspirin", "ibuprofen", "acetaminophen", "paracetamol",
+            "caffeine", "morphine", "cocaine", "warfarin", "insulin",
+            "penicillin", "metformin", "lipitor", "viagra", "prozac"
+        ]
+        
+        compounds = []
+        for drug in common_drugs:
+            if drug in query_lower:
+                compounds.append(drug)
+        
+        # If we found exactly 2, return them
+        if len(compounds) == 2:
+            return compounds
+        
+        # Try to extract from patterns like "compare X and Y" or "X vs Y"
+        patterns = [
+            r"compare\s+(\w+)\s+(?:and|with|to|vs|versus)\s+(\w+)",
+            r"(\w+)\s+(?:vs|versus|compared to)\s+(\w+)",
+            r"(?:between|of)\s+(\w+)\s+and\s+(\w+)"
+        ]
+        
+        for pattern in patterns:
+            if match := re.search(pattern, query_lower):
+                return [match.group(1), match.group(2)]
+        
+        return compounds if len(compounds) >= 2 else None
     
     def _extract_chembl_id(self, query: str) -> Optional[str]:
         """Extract ChEMBL ID from query."""

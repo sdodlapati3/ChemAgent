@@ -68,6 +68,7 @@ class QueryResult:
         error: Error message if failed
         raw_output: Raw execution result for programmatic access
         cached: Whether result was retrieved from cache
+        query: Original query text
     """
     
     answer: str
@@ -78,6 +79,8 @@ class QueryResult:
     intent_type: Optional[str] = None
     error: Optional[str] = None
     raw_output: Any = None
+    cached: bool = False
+    query: str = ""  # Original query text
     cached: bool = False
     
     def __repr__(self) -> str:
@@ -177,7 +180,8 @@ class ChemAgent:
                 answer="",
                 success=False,
                 error="Empty query provided",
-                execution_time_ms=(time.time() - start_time) * 1000
+                execution_time_ms=(time.time() - start_time) * 1000,
+                query=""
             )
         
         try:
@@ -210,7 +214,8 @@ class ChemAgent:
                 success=execution_result.status == ExecutionStatus.COMPLETED,
                 intent_type=intent.intent_type.value,
                 raw_output=execution_result.final_output,
-                cached=False  # TODO: Track cache hits
+                cached=False,  # TODO: Track cache hits
+                query=user_query
             )
             
         except Exception as e:
@@ -222,7 +227,8 @@ class ChemAgent:
                 execution_time_ms=(time.time() - start_time) * 1000,
                 steps_taken=0,
                 success=False,
-                error=str(e)
+                error=str(e),
+                query=user_query
             )
     
     def query_stream(

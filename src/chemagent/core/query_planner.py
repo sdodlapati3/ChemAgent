@@ -169,6 +169,9 @@ class QueryPlanner:
         elif intent.intent_type == IntentType.SCAFFOLD_ANALYSIS:
             return self._plan_scaffold_analysis(intent)
         
+        elif intent.intent_type == IntentType.COMPARISON:
+            return self._plan_comparison(intent)
+        
         else:
             # Unknown intent - return empty plan
             return QueryPlan(
@@ -219,7 +222,8 @@ class QueryPlanner:
                 estimated_time_ms=500
             )
             steps.append(lookup_step)
-            smiles_ref = "$compound_data.smiles"
+            # search_by_name returns {compounds: [...]}, get_compound returns {smiles: ...}
+            smiles_ref = "$compound_data.compounds[0].smiles" if "compound" in entities else "$compound_data.smiles"
         
         # Step 2: Standardize SMILES
         if smiles_ref:
@@ -374,11 +378,23 @@ class QueryPlanner:
                 output_name="protein",
                 estimated_time_ms=400
             )
-        else:
+        elif "target" in entities and entities["target"]:
             lookup_step = PlanStep(
                 step_id=self._next_step_id(),
                 tool_name="uniprot_search",
-                args={"query": entities.get("target", "")},
+                args={"query": entities["target"]},
+                depends_on=[],
+                can_run_parallel=False,
+                output_name="protein",
+                estimated_time_ms=500
+            )
+        else:
+            # No valid target specified - create a dummy step that will fail gracefully
+            # This shouldn't happen if intent parser works correctly, but handle it anyway
+            lookup_step = PlanStep(
+                step_id=self._next_step_id(),
+                tool_name="uniprot_search",
+                args={"query": "protein"},  # Generic fallback
                 depends_on=[],
                 can_run_parallel=False,
                 output_name="protein",
@@ -423,7 +439,7 @@ class QueryPlanner:
                 estimated_time_ms=500
             )
             steps.append(lookup_step)
-            smiles_ref = "$compound_data.smiles"
+            smiles_ref = "$compound_data.compounds[0].smiles"
         
         # Standardize
         if smiles_ref:
@@ -513,7 +529,7 @@ class QueryPlanner:
                 estimated_time_ms=500
             )
             steps.append(lookup_step)
-            smiles_ref = "$compound_data.smiles"
+            smiles_ref = "$compound_data.compounds[0].smiles"
         
         # Standardize and check
         if smiles_ref:
@@ -659,7 +675,7 @@ class QueryPlanner:
                     estimated_time_ms=500
                 )
                 steps.append(lookup_step)
-                smiles = "$compound_data.smiles"
+                smiles = "$compound_data.compounds[0].smiles"
             
             standardize_step = PlanStep(
                 step_id=self._next_step_id(),
@@ -706,7 +722,7 @@ class QueryPlanner:
                 estimated_time_ms=500
             )
             steps.append(lookup_step)
-            smiles_ref = "$compound_data.smiles"
+            smiles_ref = "$compound_data.compounds[0].smiles"
         
         if smiles_ref:
             scaffold_step = PlanStep(
@@ -726,4 +742,69 @@ class QueryPlanner:
             estimated_time_ms=sum(s.estimated_time_ms for s in steps),
             estimated_cost=0.01,
             can_cache=True
+        )    
+    def _plan_comparison(self, intent: ParsedIntent) -> QueryPlan:
+        """
+        Plan comparison of multiple compounds.
+        
+        Steps:
+        1. Look up each compound
+        2. Calculate properties for each
+        3. Return for comparison formatting
+        """
+        steps = []
+        entities = intent.entities
+        
+        compounds = entities.get("compounds", [])
+        if len(compounds) < 2:
+            return QueryPlan(
+                steps=steps,
+                intent_type=intent.intent_type,
+                estimated_time_ms=0,
+                estimated_cost=0.0
+            )
+        
+        # Look up each compound and calculate properties
+        for i, compound in enumerate(compounds):
+            # Lookup compound
+            lookup_step = PlanStep(
+                step_id=self._next_step_id(),
+                tool_name="chembl_search_by_name",
+                args={"query": compound},
+                depends_on=[],
+                can_run_parallel=True if i > 0 else False,
+                output_name=f"compound_{i}",
+                estimated_time_ms=500
+            )
+            steps.append(lookup_step)
+            
+            # Standardize SMILES
+            standardize_step = PlanStep(
+                step_id=self._next_step_id(),
+                tool_name="rdkit_standardize_smiles",
+                args={"smiles": f"$compound_{i}.compounds[0].smiles"},
+                depends_on=[lookup_step.step_id],
+                can_run_parallel=False,
+                output_name=f"standardized_{i}",
+                estimated_time_ms=50
+            )
+            steps.append(standardize_step)
+            
+            # Calculate properties
+            props_step = PlanStep(
+                step_id=self._next_step_id(),
+                tool_name="rdkit_calc_properties",
+                args={"smiles": f"$standardized_{i}.smiles"},
+                depends_on=[standardize_step.step_id],
+                can_run_parallel=False,
+                output_name=f"properties_{i}",
+                estimated_time_ms=100
+            )
+            steps.append(props_step)
+        
+        return QueryPlan(
+            steps=steps,
+            intent_type=intent.intent_type,
+            estimated_time_ms=sum(s.estimated_time_ms for s in steps),
+            estimated_cost=0.02
         )

@@ -297,12 +297,17 @@ class UniProtClient:
         
         logger.info(f"Searching UniProt for: {query}")
         
+        # Validate query
+        if not query or not query.strip():
+            logger.warning("Empty query provided to search_proteins")
+            return []
+        
         # Make request
         def _search():
             url = f"{self.BASE_URL}/uniprotkb/search"
             
             # Build query
-            search_query = query
+            search_query = query.strip()
             if reviewed_only:
                 search_query += " AND (reviewed:true)"
             

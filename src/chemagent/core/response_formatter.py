@@ -18,6 +18,16 @@ class ResponseFormatter:
     Provides intent-specific formatting for different types of chemistry queries.
     """
     
+    def _safe_float(self, value: Any, default: str = "N/A", decimals: int = 2) -> str:
+        """Safely convert value to formatted float string."""
+        try:
+            if value is None:
+                return default
+            float_val = float(value)
+            return f"{float_val:.{decimals}f}"
+        except (ValueError, TypeError):
+            return str(value) if value is not None else default
+    
     def format(self, intent: ParsedIntent, result: ExecutionResult) -> str:
         """
         Generate human-readable answer from execution result.
@@ -48,6 +58,7 @@ class ResponseFormatter:
             IntentType.TARGET_LOOKUP: self._format_target,
             IntentType.STRUCTURE_CONVERSION: self._format_conversion,
             IntentType.SCAFFOLD_ANALYSIS: self._format_scaffold,
+            IntentType.COMPARISON: self._format_comparison,
         }
         
         formatter = formatters.get(intent.intent_type, self._format_generic)
@@ -88,13 +99,13 @@ class ResponseFormatter:
         # Molecular properties
         if data.get("molecular_weight"):
             answer += "### Properties\n\n"
-            answer += f"- **Molecular Weight:** {data['molecular_weight']:.2f} Da\n"
+            answer += f"- **Molecular Weight:** {self._safe_float(data['molecular_weight'])} Da\n"
             
             if data.get("alogp") is not None:
-                answer += f"- **ALogP:** {data['alogp']:.2f}\n"
+                answer += f"- **ALogP:** {self._safe_float(data['alogp'])}\n"
             
             if data.get("psa") is not None:
-                answer += f"- **Polar Surface Area:** {data['psa']:.2f} Ų\n"
+                answer += f"- **Polar Surface Area:** {self._safe_float(data['psa'])} Ų\n"
             
             if data.get("formula"):
                 answer += f"- **Formula:** {data['formula']}\n"
@@ -132,13 +143,13 @@ class ResponseFormatter:
         
         # Basic properties
         if data.get("molecular_weight") is not None:
-            answer += f"- **Molecular Weight:** {data['molecular_weight']:.2f} Da\n"
+            answer += f"- **Molecular Weight:** {self._safe_float(data['molecular_weight'])} Da\n"
         
         if data.get("exact_mass") is not None:
-            answer += f"- **Exact Mass:** {data['exact_mass']:.4f} Da\n"
+            answer += f"- **Exact Mass:** {self._safe_float(data['exact_mass'], decimals=4)} Da\n"
         
         if data.get("logp") is not None:
-            answer += f"- **LogP:** {data['logp']:.2f}\n"
+            answer += f"- **LogP:** {self._safe_float(data['logp'])}\n"
         
         answer += "\n"
         
@@ -151,7 +162,7 @@ class ResponseFormatter:
             answer += f"- **H-Bond Acceptors:** {data['h_bond_acceptors']}\n"
         
         if data.get("polar_surface_area") is not None:
-            answer += f"- **Polar Surface Area:** {data['polar_surface_area']:.2f} Ų\n"
+            answer += f"- **Polar Surface Area:** {self._safe_float(data['polar_surface_area'])} Ų\n"
         
         answer += "\n"
         
@@ -171,7 +182,7 @@ class ResponseFormatter:
             answer += f"- **Heteroatoms:** {data['num_heteroatoms']}\n"
         
         if data.get("fraction_csp3") is not None:
-            answer += f"- **Fraction Csp3:** {data['fraction_csp3']:.3f}\n"
+            answer += f"- **Fraction Csp3:** {self._safe_float(data['fraction_csp3'], decimals=3)}\n"
         
         return answer
     
@@ -198,15 +209,49 @@ class ResponseFormatter:
         
         answer += "### Top Matches\n\n"
         
-        compounds = data.get("compounds", [])[:10]  # Show top 10
+        # Get compounds from either 'compounds' or 'results' key
+        compounds = data.get("compounds", data.get("results", []))[:10]  # Show top 10
+        
+        if not compounds:
+            answer += f"_No compound details available (raw count: {count})_\n"
+            return answer
         
         for i, compound in enumerate(compounds, 1):
-            if isinstance(compound, dict):
-                chembl_id = compound.get("chembl_id", "N/A")
-                similarity = compound.get("similarity", 0)
-                smiles = compound.get("smiles", "")
+            # Handle both dict and dataclass objects
+            if hasattr(compound, '__dict__'):
+                # It's a dataclass, access attributes directly
+                chembl_id = getattr(compound, 'chembl_id', 'N/A')
+                similarity = getattr(compound, 'similarity', None)
+                smiles = getattr(compound, 'smiles', None)
+                name = getattr(compound, 'name', None)
                 
-                answer += f"{i}. **{chembl_id}** (Similarity: {similarity:.3f})\n"
+                answer += f"{i}. **{chembl_id}**"
+                if name:
+                    answer += f" - {name}"
+                
+                # Display similarity if available
+                if similarity is not None:
+                    answer += f" (Similarity: {self._safe_float(similarity, decimals=3)})\n"
+                else:
+                    answer += f" (Match found)\n"
+                    
+                if smiles:
+                    answer += f"   - SMILES: `{smiles}`\n"
+            elif isinstance(compound, dict):
+                chembl_id = compound.get("chembl_id", "N/A")
+                similarity = compound.get("similarity", compound.get("tanimoto_similarity", None))
+                smiles = compound.get("smiles", compound.get("canonical_smiles", ""))
+                name = compound.get("name", compound.get("pref_name", ""))
+                
+                answer += f"{i}. **{chembl_id}**"
+                if name:
+                    answer += f" - {name}"
+                
+                if similarity is not None:
+                    answer += f" (Similarity: {self._safe_float(similarity, decimals=3)})\n"
+                else:
+                    answer += f" (Match found)\n"
+                    
                 if smiles:
                     answer += f"   - SMILES: `{smiles}`\n"
         
@@ -273,14 +318,22 @@ class ResponseFormatter:
         # Molecular weight
         mw = data.get("molecular_weight")
         if mw is not None:
-            status = "✓" if mw <= 500 else "✗"
-            answer += f"- **Molecular Weight:** {mw:.2f} Da {status} (limit: ≤ 500)\n"
+            try:
+                mw_float = float(mw)
+                status = "✓" if mw_float <= 500 else "✗"
+                answer += f"- **Molecular Weight:** {self._safe_float(mw)} Da {status} (limit: ≤ 500)\n"
+            except (ValueError, TypeError):
+                answer += f"- **Molecular Weight:** {mw}\n"
         
         # LogP
         logp = data.get("logp")
         if logp is not None:
-            status = "✓" if logp <= 5 else "✗"
-            answer += f"- **LogP:** {logp:.2f} {status} (limit: ≤ 5)\n"
+            try:
+                logp_float = float(logp)
+                status = "✓" if logp_float <= 5 else "✗"
+                answer += f"- **LogP:** {self._safe_float(logp)} {status} (limit: ≤ 5)\n"
+            except (ValueError, TypeError):
+                answer += f"- **LogP:** {logp}\n"
         
         # H-bond donors
         hbd = data.get("h_bond_donors")
@@ -343,6 +396,42 @@ class ResponseFormatter:
         
         answer = "## Target Information\n\n"
         
+        # Check if we have a list of proteins
+        proteins = data.get("proteins", [])
+        if proteins:
+            count = data.get("count", len(proteins))
+            answer += f"**Found:** {count} protein(s)\n\n"
+            
+            for i, protein in enumerate(proteins[:5], 1):  # Show top 5
+                # Handle both dict and dataclass
+                if hasattr(protein, '__dict__'):
+                    uniprot_id = getattr(protein, 'uniprot_id', 'N/A')
+                    name = getattr(protein, 'protein_name', None)
+                    organism = getattr(protein, 'organism', None)
+                    gene = getattr(protein, 'gene_name', None)
+                else:
+                    uniprot_id = protein.get('uniprot_id', 'N/A')
+                    name = protein.get('protein_name', None)
+                    organism = protein.get('organism', None)
+                    gene = protein.get('gene_name', None)
+                
+                answer += f"{i}. **{uniprot_id}**"
+                if name:
+                    answer += f" - {name}"
+                answer += "\n"
+                
+                if organism:
+                    answer += f"   - Organism: {organism}\n"
+                if gene:
+                    answer += f"   - Gene: {gene}\n"
+                answer += "\n"
+            
+            if count > 5:
+                answer += f"_... and {count - 5} more proteins_\n"
+            
+            return answer
+        
+        # Single target format (legacy)
         if data.get("pref_name"):
             answer += f"**Name:** {data['pref_name']}\n\n"
         
@@ -395,6 +484,85 @@ class ResponseFormatter:
         
         if data.get("scaffold_smiles"):
             answer += f"**Murcko Scaffold:** `{data['scaffold_smiles']}`\n\n"
+        
+        return answer
+    
+    def _format_comparison(self, data: Dict[str, Any]) -> str:
+        """Format comparison results."""
+        # Extract compound properties from execution outputs
+        # Expected structure: {properties_0: {...}, properties_1: {...}}
+        
+        properties_list = []
+        compound_names = []
+        
+        # Collect all property results
+        for key, value in data.items():
+            if key.startswith("properties_"):
+                properties_list.append(value)
+            elif key.startswith("compound_"):
+                # Handle both dict and dataclass for compound results
+                if isinstance(value, dict):
+                    if "compounds" in value and value["compounds"]:
+                        first_compound = value["compounds"][0]
+                        if hasattr(first_compound, '__dict__'):
+                            # Dataclass
+                            name = getattr(first_compound, 'name', None) or getattr(first_compound, 'chembl_id', 'Unknown')
+                        else:
+                            # Dict
+                            name = first_compound.get("name", first_compound.get("chembl_id", "Unknown"))
+                        compound_names.append(name)
+                elif hasattr(value, '__dict__'):
+                    # Direct dataclass object
+                    name = getattr(value, 'name', None) or getattr(value, 'chembl_id', 'Unknown')
+                    compound_names.append(name)
+        
+        if len(properties_list) < 2:
+            return "❌ Insufficient data for comparison"
+        
+        # Ensure we have compound names, use generic if missing
+        if len(compound_names) < len(properties_list):
+            for i in range(len(compound_names), len(properties_list)):
+                compound_names.append(f"Compound {i+1}")
+        
+        # Build comparison table
+        answer = "## Property Comparison\n\n"
+        
+        # Header row
+        answer += "| Property | "
+        for name in compound_names[:len(properties_list)]:
+            answer += f"{name.capitalize()} | "
+        answer += "\n"
+        
+        answer += "|" + "---|" * (len(properties_list) + 1) + "\n"
+        
+        # Property rows
+        properties = [
+            ("Molecular Weight", "molecular_weight", "Da"),
+            ("Exact Mass", "exact_mass", "Da"),
+            ("LogP", "logp", ""),
+            ("H-Bond Donors", "num_hbd", ""),
+            ("H-Bond Acceptors", "num_hba", ""),
+            ("Polar Surface Area", "tpsa", "Ų"),
+            ("Rotatable Bonds", "num_rotatable_bonds", ""),
+            ("Aromatic Rings", "num_aromatic_rings", ""),
+            ("Fraction Csp3", "fraction_csp3", ""),
+        ]
+        
+        for prop_label, prop_key, unit in properties:
+            answer += f"| **{prop_label}** | "
+            for props in properties_list:
+                if isinstance(props, dict) and prop_key in props:
+                    value = props[prop_key]
+                    formatted_value = self._safe_float(value)
+                    if formatted_value != "N/A" and unit:
+                        answer += f"{formatted_value} {unit} | "
+                    elif formatted_value != "N/A":
+                        answer += f"{formatted_value} | "
+                    else:
+                        answer += "N/A | "
+                else:
+                    answer += "N/A | "
+            answer += "\n"
         
         return answer
 

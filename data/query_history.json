@@ -1,0 +1,529 @@
+[
+  {
+    "id": "0b279c93-8a7b-4163-9964-48dfef31ef3b",
+    "query": "What is CHEMBL25?",
+    "result": {
+      "answer": "## 8-hour bayer\n\n**ChEMBL ID:** CHEMBL25\n\n**SMILES:** `CC(=O)Oc1ccccc1C(=O)O`\n\n### Properties\n\n- **Molecular Weight:** 180.16 Da\n- **ALogP:** 1.31\n- **Polar Surface Area:** 63.60 \u0172\n- **Formula:** C9H8O4\n\n### Identifiers\n\n- **InChI Key:** `BSYNRYMUTXBXSQ-UHFFFAOYSA-N`\n- **InChI:** `InChI=1S/C9H8O4/c1-6(10)13-8-5-3-2-4-7(8)9(11)12/h...`\n\n### Synonyms\n\n8-hour bayer, Acetosalic acid, Acetylsalic acid, Acetyl salicylate, Acetylsalicylic acid, Acetylsalicylic acid, Acetylsalicylic acid (who-ip), Acetylsalicylicum acidum, Acidum acetylsalicylicum, Acidum acetylsalicylicum (who-ip)\n",
+      "success": true,
+      "error": null,
+      "intent_type": "compound_lookup",
+      "execution_time_ms": 1.7008781433105469,
+      "steps_taken": 1,
+      "cached": false
+    },
+    "execution_time": 0.0017139911651611328,
+    "cached": false,
+    "timestamp": "2026-01-11T07:15:53.119987",
+    "favorite": false
+  },
+  {
+    "id": "13d89a53-21ff-4722-ba77-539aabe26f5a",
+    "query": "Find similar compounds to aspirin",
+    "result": {
+      "answer": "## Similarity Search Results\n\n**Query SMILES:** `CC(=O)Oc1ccccc1C(=O)O`\n\n**Threshold:** 0.7\n\n**Found:** 3 similar compounds\n\n### Top Matches\n\n1. **CHEMBL25** (Match found)\n   - SMILES: `CC(=O)Oc1ccccc1C(=O)O`\n2. **CHEMBL1697753** (Match found)\n   - SMILES: `CC(=O)Oc1ccccc1C(=O)O.NCCCCC(N)C(=O)O`\n3. **CHEMBL2296002** (Match found)\n   - SMILES: `CC(=O)Oc1ccccc1C(=O)O.NCCCC[C@H](N)C(=O)O`\n",
+      "success": true,
+      "error": null,
+      "intent_type": "similarity_search",
+      "execution_time_ms": 4.973888397216797,
+      "steps_taken": 3,
+      "cached": false
+    },
+    "execution_time": 0.004989147186279297,
+    "cached": false,
+    "timestamp": "2026-01-11T07:15:49.907249",
+    "favorite": false
+  },
+  {
+    "id": "2bc50b59-466e-406a-90d1-a417318a5668",
+    "query": "Get properties for caffeine",
+    "result": {
+      "answer": "## Molecular Properties\n\n- **Molecular Weight:** 194.19 Da\n- **Exact Mass:** 194.0804 Da\n- **LogP:** -1.03\n\n### Hydrogen Bonding\n\n- **H-Bond Donors:** 0\n- **H-Bond Acceptors:** 6\n- **Polar Surface Area:** 61.82 \u0172\n\n### Structural Features\n\n- **Rotatable Bonds:** 0\n- **Number of Rings:** 2\n- **Aromatic Rings:** 2\n- **Heteroatoms:** 6\n- **Fraction Csp3:** 0.375\n",
+      "success": true,
+      "error": null,
+      "intent_type": "property_calculation",
+      "execution_time_ms": 4.7130584716796875,
+      "steps_taken": 3,
+      "cached": false
+    },
+    "execution_time": 0.004728794097900391,
+    "cached": false,
+    "timestamp": "2026-01-11T07:15:34.827055",
+    "favorite": false
+  },
+  {
+    "id": "183dbf15-77ab-4b8a-bfa6-9a1b38309840",
+    "query": "What targets does ibuprofen bind to?",
+    "result": {
+      "answer": "## Target Information\n\n**Found:** 10 protein(s)\n\n1. **Q9H3P7** - Golgi resident protein GCP60\n   - Organism: Homo sapiens\n\n2. **P0DJI8** - Serum amyloid A-1 protein\n   - Organism: Homo sapiens\n\n3. **P02686** - Myelin basic protein\n   - Organism: Homo sapiens\n\n4. **P19525** - Interferon-induced, double-stranded RNA-activated protein kinase\n   - Organism: Homo sapiens\n\n5. **P10809** - 60 kDa heat shock protein, mitochondrial\n   - Organism: Homo sapiens\n\n_... and 5 more proteins_\n",
+      "success": true,
+      "error": null,
+      "intent_type": "target_lookup",
+      "execution_time_ms": 8.794069290161133,
+      "steps_taken": 1,
+      "cached": false
+    },
+    "execution_time": 0.008810758590698242,
+    "cached": false,
+    "timestamp": "2026-01-11T07:15:21.832440",
+    "favorite": false
+  },
+  {
+    "id": "3939aa1d-7565-4e6d-9038-9d7e3719eb5b",
+    "query": "Compare molecular weight of aspirin and ibuprofen",
+    "result": {
+      "answer": "## Property Comparison\n\n| Property | Chembl25 | Chembl521 | \n|---|---|---|\n| **Molecular Weight** | 180.16 Da | 206.28 Da | \n| **Exact Mass** | 180.04 Da | 206.13 Da | \n| **LogP** | 1.31 | 3.07 | \n| **H-Bond Donors** | N/A | N/A | \n| **H-Bond Acceptors** | N/A | N/A | \n| **Polar Surface Area** | N/A | N/A | \n| **Rotatable Bonds** | N/A | N/A | \n| **Aromatic Rings** | 1.00 | 1.00 | \n| **Fraction Csp3** | 0.11 | 0.46 | \n",
+      "success": true,
+      "error": null,
+      "intent_type": "comparison",
+      "execution_time_ms": 23.76103401184082,
+      "steps_taken": 6,
+      "cached": false
+    },
+    "execution_time": 0.023786067962646484,
+    "cached": false,
+    "timestamp": "2026-01-11T07:15:16.992750",
+    "favorite": false
+  },
+  {
+    "id": "3238fd42-58be-4341-b6d2-8bdac235bc33",
+    "query": "Compare molecular weight of aspirin and ibuprofen",
+    "result": {
+      "answer": "## Property Comparison\n\n| Property | Chembl25 | Chembl521 | \n|---|---|---|\n| **Molecular Weight** | 206.28 Da | 180.16 Da | \n| **Exact Mass** | 206.13 Da | 180.04 Da | \n| **LogP** | 3.07 | 1.31 | \n| **H-Bond Donors** | N/A | N/A | \n| **H-Bond Acceptors** | N/A | N/A | \n| **Polar Surface Area** | N/A | N/A | \n| **Rotatable Bonds** | N/A | N/A | \n| **Aromatic Rings** | 1.00 | 1.00 | \n| **Fraction Csp3** | 0.46 | 0.11 | \n",
+      "success": true,
+      "error": null,
+      "intent_type": "comparison",
+      "execution_time_ms": 23.324966430664062,
+      "steps_taken": 6,
+      "cached": false
+    },
+    "execution_time": 0.023346662521362305,
+    "cached": false,
+    "timestamp": "2026-01-11T07:12:18.557008",
+    "favorite": false
+  },
+  {
+    "id": "3add3b95-7637-4bf8-a087-3713d93675cd",
+    "query": "Compare molecular weight of aspirin and ibuprofen",
+    "result": {
+      "answer": "",
+      "success": false,
+      "error": "Unknown format code 'f' for object of type 'str'",
+      "intent_type": null,
+      "execution_time_ms": 21.455049514770508,
+      "steps_taken": 0,
+      "cached": false
+    },
+    "execution_time": 0.02147674560546875,
+    "cached": false,
+    "timestamp": "2026-01-11T07:11:25.304945",
+    "favorite": false
+  },
+  {
+    "id": "59ca3117-b92d-4049-b638-a155493414eb",
+    "query": "Compare molecular weight of aspirin and ibuprofen",
+    "result": {
+      "answer": "\u274c Insufficient data for comparison",
+      "success": true,
+      "error": null,
+      "intent_type": "comparison",
+      "execution_time_ms": 20.240306854248047,
+      "steps_taken": 6,
+      "cached": false
+    },
+    "execution_time": 0.020261764526367188,
+    "cached": false,
+    "timestamp": "2026-01-11T07:09:49.447693",
+    "favorite": false
+  },
+  {
+    "id": "c9987f8c-cb05-4440-a9a2-63f0692e507c",
+    "query": "Compare molecular weight of aspirin and ibuprofen",
+    "result": {
+      "answer": "\u274c Insufficient data for comparison",
+      "success": true,
+      "error": null,
+      "intent_type": "comparison",
+      "execution_time_ms": 33384.671449661255,
+      "steps_taken": 6,
+      "cached": false
+    },
+    "execution_time": 33.38469362258911,
+    "cached": false,
+    "timestamp": "2026-01-11T07:09:03.838879",
+    "favorite": false
+  },
+  {
+    "id": "f0c8dd30-dcb3-4250-a43d-1a26c14aa705",
+    "query": "What targets does ibuprofen bind to?",
+    "result": {
+      "answer": "## Target Information\n\n",
+      "success": true,
+      "error": null,
+      "intent_type": "target_lookup",
+      "execution_time_ms": 5.359888076782227,
+      "steps_taken": 1,
+      "cached": false
+    },
+    "execution_time": 0.00537419319152832,
+    "cached": false,
+    "timestamp": "2026-01-11T07:07:46.728769",
+    "favorite": false
+  },
+  {
+    "id": "78da36a5-3d67-43d6-934e-5bb672898d89",
+    "query": "Get properties for caffeine",
+    "result": {
+      "answer": "## Molecular Properties\n\n- **Molecular Weight:** 194.19 Da\n- **Exact Mass:** 194.0804 Da\n- **LogP:** -1.03\n\n### Hydrogen Bonding\n\n- **H-Bond Donors:** 0\n- **H-Bond Acceptors:** 6\n- **Polar Surface Area:** 61.82 \u0172\n\n### Structural Features\n\n- **Rotatable Bonds:** 0\n- **Number of Rings:** 2\n- **Aromatic Rings:** 2\n- **Heteroatoms:** 6\n- **Fraction Csp3:** 0.375\n",
+      "success": true,
+      "error": null,
+      "intent_type": "property_calculation",
+      "execution_time_ms": 8.802413940429688,
+      "steps_taken": 3,
+      "cached": false
+    },
+    "execution_time": 0.008817672729492188,
+    "cached": false,
+    "timestamp": "2026-01-11T07:07:41.052221",
+    "favorite": false
+  },
+  {
+    "id": "3ccd2fcc-f6c1-443e-a442-73c6d97a421c",
+    "query": "Find similar compounds to aspirin",
+    "result": {
+      "answer": "## Similarity Search Results\n\n**Query SMILES:** `CC(=O)Oc1ccccc1C(=O)O`\n\n**Threshold:** 0.7\n\n**Found:** 3 similar compounds\n\n### Top Matches\n\n1. **CHEMBL25** (Match found)\n   - SMILES: `CC(=O)Oc1ccccc1C(=O)O`\n2. **CHEMBL1697753** (Match found)\n   - SMILES: `CC(=O)Oc1ccccc1C(=O)O.NCCCCC(N)C(=O)O`\n3. **CHEMBL2296002** (Match found)\n   - SMILES: `CC(=O)Oc1ccccc1C(=O)O.NCCCC[C@H](N)C(=O)O`\n",
+      "success": true,
+      "error": null,
+      "intent_type": "similarity_search",
+      "execution_time_ms": 5.070924758911133,
+      "steps_taken": 3,
+      "cached": false
+    },
+    "execution_time": 0.005087614059448242,
+    "cached": false,
+    "timestamp": "2026-01-11T07:07:29.018733",
+    "favorite": false
+  },
+  {
+    "id": "b2d73232-aa55-4bce-99ef-e912d663633f",
+    "query": "What is CHEMBL25?",
+    "result": {
+      "answer": "## 8-hour bayer\n\n**ChEMBL ID:** CHEMBL25\n\n**SMILES:** `CC(=O)Oc1ccccc1C(=O)O`\n\n### Properties\n\n- **Molecular Weight:** 180.16 Da\n- **ALogP:** 1.31\n- **Polar Surface Area:** 63.60 \u0172\n- **Formula:** C9H8O4\n\n### Identifiers\n\n- **InChI Key:** `BSYNRYMUTXBXSQ-UHFFFAOYSA-N`\n- **InChI:** `InChI=1S/C9H8O4/c1-6(10)13-8-5-3-2-4-7(8)9(11)12/h...`\n\n### Synonyms\n\n8-hour bayer, Acetosalic acid, Acetylsalic acid, Acetyl salicylate, Acetylsalicylic acid, Acetylsalicylic acid, Acetylsalicylic acid (who-ip), Acetylsalicylicum acidum, Acidum acetylsalicylicum, Acidum acetylsalicylicum (who-ip)\n",
+      "success": true,
+      "error": null,
+      "intent_type": "compound_lookup",
+      "execution_time_ms": 10.043859481811523,
+      "steps_taken": 1,
+      "cached": false
+    },
+    "execution_time": 0.010064363479614258,
+    "cached": false,
+    "timestamp": "2026-01-11T07:07:23.753949",
+    "favorite": false
+  },
+  {
+    "id": "a75efd94-9efd-4654-b02e-a1b51f76d264",
+    "query": "Find similar compounds to aspirin",
+    "result": {
+      "answer": "## Similarity Search Results\n\n**Query SMILES:** `CC(=O)Oc1ccccc1C(=O)O`\n\n**Threshold:** 0.7\n\n**Found:** 3 similar compounds\n\n### Top Matches\n\n",
+      "success": true,
+      "error": null,
+      "intent_type": "similarity_search",
+      "execution_time_ms": 5.491971969604492,
+      "steps_taken": 3,
+      "cached": false
+    },
+    "execution_time": 0.005509853363037109,
+    "cached": false,
+    "timestamp": "2026-01-11T07:05:43.399528",
+    "favorite": false
+  },
+  {
+    "id": "6b946e8b-aded-4f6c-b03c-df296fc5dc49",
+    "query": "What is CHEMBL25?",
+    "result": {
+      "answer": "## 8-hour bayer\n\n**ChEMBL ID:** CHEMBL25\n\n**SMILES:** `CC(=O)Oc1ccccc1C(=O)O`\n\n### Properties\n\n- **Molecular Weight:** 180.16 Da\n- **ALogP:** 1.31\n- **Polar Surface Area:** 63.60 \u0172\n- **Formula:** C9H8O4\n\n### Identifiers\n\n- **InChI Key:** `BSYNRYMUTXBXSQ-UHFFFAOYSA-N`\n- **InChI:** `InChI=1S/C9H8O4/c1-6(10)13-8-5-3-2-4-7(8)9(11)12/h...`\n\n### Synonyms\n\n8-hour bayer, Acetosalic acid, Acetylsalic acid, Acetyl salicylate, Acetylsalicylic acid, Acetylsalicylic acid, Acetylsalicylic acid (who-ip), Acetylsalicylicum acidum, Acidum acetylsalicylicum, Acidum acetylsalicylicum (who-ip)\n",
+      "success": true,
+      "error": null,
+      "intent_type": "compound_lookup",
+      "execution_time_ms": 10.148048400878906,
+      "steps_taken": 1,
+      "cached": false
+    },
+    "execution_time": 0.010168790817260742,
+    "cached": false,
+    "timestamp": "2026-01-11T07:05:34.364185",
+    "favorite": false
+  },
+  {
+    "id": "46b43225-8666-426f-83c8-285a53ff88b9",
+    "query": "What targets does ibuprofen bind to?",
+    "result": {
+      "answer": "## Target Information\n\n",
+      "success": true,
+      "error": null,
+      "intent_type": "target_lookup",
+      "execution_time_ms": 7.742166519165039,
+      "steps_taken": 1,
+      "cached": false
+    },
+    "execution_time": 0.007758378982543945,
+    "cached": false,
+    "timestamp": "2026-01-11T07:05:03.326270",
+    "favorite": false
+  },
+  {
+    "id": "13aa9725-5e00-42e8-b84d-cb6c580575d1",
+    "query": "What is CHEMBL25?",
+    "result": {
+      "answer": "## 8-hour bayer\n\n**ChEMBL ID:** CHEMBL25\n\n**SMILES:** `CC(=O)Oc1ccccc1C(=O)O`\n\n### Properties\n\n- **Molecular Weight:** 180.16 Da\n- **ALogP:** 1.31\n- **Polar Surface Area:** 63.60 \u0172\n- **Formula:** C9H8O4\n\n### Identifiers\n\n- **InChI Key:** `BSYNRYMUTXBXSQ-UHFFFAOYSA-N`\n- **InChI:** `InChI=1S/C9H8O4/c1-6(10)13-8-5-3-2-4-7(8)9(11)12/h...`\n\n### Synonyms\n\n8-hour bayer, Acetosalic acid, Acetylsalic acid, Acetyl salicylate, Acetylsalicylic acid, Acetylsalicylic acid, Acetylsalicylic acid (who-ip), Acetylsalicylicum acidum, Acidum acetylsalicylicum, Acidum acetylsalicylicum (who-ip)\n",
+      "success": true,
+      "error": null,
+      "intent_type": "compound_lookup",
+      "execution_time_ms": 9.224891662597656,
+      "steps_taken": 1,
+      "cached": false
+    },
+    "execution_time": 0.009241580963134766,
+    "cached": false,
+    "timestamp": "2026-01-11T07:05:00.073098",
+    "favorite": false
+  },
+  {
+    "id": "bac841bd-d4e8-49b2-a87e-8237ac55af3b",
+    "query": "Find similar compounds to aspirin",
+    "result": {
+      "answer": "## Similarity Search Results\n\n**Query SMILES:** `CC(=O)Oc1ccccc1C(=O)O`\n\n**Threshold:** 0.7\n\n**Found:** 3 similar compounds\n\n### Top Matches\n\n",
+      "success": true,
+      "error": null,
+      "intent_type": "similarity_search",
+      "execution_time_ms": 11.440277099609375,
+      "steps_taken": 3,
+      "cached": false
+    },
+    "execution_time": 0.011475324630737305,
+    "cached": false,
+    "timestamp": "2026-01-11T07:04:02.325499",
+    "favorite": false
+  },
+  {
+    "id": "c70e533c-af3e-4bc4-97de-fbe4cf813dfb",
+    "query": "Compare molecular weight of aspirin and ibuprofen",
+    "result": {
+      "answer": "",
+      "success": false,
+      "error": "QueryPlan.__init__() got an unexpected keyword argument 'can_parallelize'",
+      "intent_type": null,
+      "execution_time_ms": 2.667665481567383,
+      "steps_taken": 0,
+      "cached": false
+    },
+    "execution_time": 0.002680540084838867,
+    "cached": false,
+    "timestamp": "2026-01-11T07:02:08.036067",
+    "favorite": false
+  },
+  {
+    "id": "b5593ff4-2b5e-45ae-8990-89798bc4c40a",
+    "query": "What targets does ibuprofen bind to?",
+    "result": {
+      "answer": "## Target Information\n\n",
+      "success": true,
+      "error": null,
+      "intent_type": "target_lookup",
+      "execution_time_ms": 8.75997543334961,
+      "steps_taken": 1,
+      "cached": false
+    },
+    "execution_time": 0.008771896362304688,
+    "cached": false,
+    "timestamp": "2026-01-11T07:02:04.271853",
+    "favorite": false
+  },
+  {
+    "id": "73f0bc97-60e7-4d04-a9be-4c622ecbe669",
+    "query": "Get properties for caffeine",
+    "result": {
+      "answer": "## Molecular Properties\n\n- **Molecular Weight:** 194.19 Da\n- **Exact Mass:** 194.0804 Da\n- **LogP:** -1.03\n\n### Hydrogen Bonding\n\n- **H-Bond Donors:** 0\n- **H-Bond Acceptors:** 6\n- **Polar Surface Area:** 61.82 \u0172\n\n### Structural Features\n\n- **Rotatable Bonds:** 0\n- **Number of Rings:** 2\n- **Aromatic Rings:** 2\n- **Heteroatoms:** 6\n- **Fraction Csp3:** 0.375\n",
+      "success": true,
+      "error": null,
+      "intent_type": "property_calculation",
+      "execution_time_ms": 35.83574295043945,
+      "steps_taken": 3,
+      "cached": false
+    },
+    "execution_time": 0.035851240158081055,
+    "cached": false,
+    "timestamp": "2026-01-11T07:02:01.024349",
+    "favorite": false
+  },
+  {
+    "id": "1678b8b2-d7b0-4d34-80d8-1501f860bf8e",
+    "query": "What is CHEMBL25?",
+    "result": {
+      "answer": "## 8-hour bayer\n\n**ChEMBL ID:** CHEMBL25\n\n**SMILES:** `CC(=O)Oc1ccccc1C(=O)O`\n\n### Properties\n\n- **Molecular Weight:** 180.16 Da\n- **ALogP:** 1.31\n- **Polar Surface Area:** 63.60 \u0172\n- **Formula:** C9H8O4\n\n### Identifiers\n\n- **InChI Key:** `BSYNRYMUTXBXSQ-UHFFFAOYSA-N`\n- **InChI:** `InChI=1S/C9H8O4/c1-6(10)13-8-5-3-2-4-7(8)9(11)12/h...`\n\n### Synonyms\n\n8-hour bayer, Acetosalic acid, Acetylsalic acid, Acetyl salicylate, Acetylsalicylic acid, Acetylsalicylic acid, Acetylsalicylic acid (who-ip), Acetylsalicylicum acidum, Acidum acetylsalicylicum, Acidum acetylsalicylicum (who-ip)\n",
+      "success": true,
+      "error": null,
+      "intent_type": "compound_lookup",
+      "execution_time_ms": 4.114389419555664,
+      "steps_taken": 1,
+      "cached": false
+    },
+    "execution_time": 0.004128456115722656,
+    "cached": false,
+    "timestamp": "2026-01-11T07:01:53.192734",
+    "favorite": false
+  },
+  {
+    "id": "efee4414-f20d-4bb7-839d-79607b57a2cb",
+    "query": "Find similar compounds to aspirin",
+    "result": {
+      "answer": "## Similarity Search Results\n\n**Query SMILES:** `CC(=O)Oc1ccccc1C(=O)O`\n\n**Threshold:** 0.7\n\n**Found:** 3 similar compounds\n\n### Top Matches\n\n",
+      "success": true,
+      "error": null,
+      "intent_type": "similarity_search",
+      "execution_time_ms": 9.680509567260742,
+      "steps_taken": 3,
+      "cached": false
+    },
+    "execution_time": 0.009699106216430664,
+    "cached": false,
+    "timestamp": "2026-01-11T07:01:02.558121",
+    "favorite": false
+  },
+  {
+    "id": "5dba77eb-8ae1-4675-977b-4e9d10f97df5",
+    "query": "What is CHEMBL25?",
+    "result": {
+      "answer": "## 8-hour bayer\n\n**ChEMBL ID:** CHEMBL25\n\n**SMILES:** `CC(=O)Oc1ccccc1C(=O)O`\n\n### Properties\n\n- **Molecular Weight:** 180.16 Da\n- **ALogP:** 1.31\n- **Polar Surface Area:** 63.60 \u0172\n- **Formula:** C9H8O4\n\n### Identifiers\n\n- **InChI Key:** `BSYNRYMUTXBXSQ-UHFFFAOYSA-N`\n- **InChI:** `InChI=1S/C9H8O4/c1-6(10)13-8-5-3-2-4-7(8)9(11)12/h...`\n\n### Synonyms\n\n8-hour bayer, Acetosalic acid, Acetylsalic acid, Acetyl salicylate, Acetylsalicylic acid, Acetylsalicylic acid, Acetylsalicylic acid (who-ip), Acetylsalicylicum acidum, Acidum acetylsalicylicum, Acidum acetylsalicylicum (who-ip)\n",
+      "success": true,
+      "error": null,
+      "intent_type": "compound_lookup",
+      "execution_time_ms": 17.797231674194336,
+      "steps_taken": 1,
+      "cached": false
+    },
+    "execution_time": 0.017816781997680664,
+    "cached": false,
+    "timestamp": "2026-01-11T06:57:12.826472",
+    "favorite": false
+  },
+  {
+    "id": "25fee46a-e6ca-4b36-a51b-3caad45e66c0",
+    "query": "Compare molecular weight of aspirin and ibuprofen",
+    "result": {
+      "answer": "## Molecular Properties\n\n- **Molecular Weight:** 180.16 Da\n- **Exact Mass:** 180.0423 Da\n- **LogP:** 1.31\n\n### Hydrogen Bonding\n\n- **H-Bond Donors:** 1\n- **H-Bond Acceptors:** 3\n- **Polar Surface Area:** 63.60 \u0172\n\n### Structural Features\n\n- **Rotatable Bonds:** 2\n- **Number of Rings:** 1\n- **Aromatic Rings:** 1\n- **Heteroatoms:** 4\n- **Fraction Csp3:** 0.111\n",
+      "success": true,
+      "error": null,
+      "intent_type": "property_calculation",
+      "execution_time_ms": 39.9172306060791,
+      "steps_taken": 3,
+      "cached": false
+    },
+    "execution_time": 0.03993964195251465,
+    "cached": false,
+    "timestamp": "2026-01-11T06:52:06.068512",
+    "favorite": false
+  },
+  {
+    "id": "fe846519-9796-4b2a-ae8a-d8272115c855",
+    "query": "What targets does ibuprofen bind to?",
+    "result": {
+      "answer": "## Target Information\n\n",
+      "success": true,
+      "error": null,
+      "intent_type": "target_lookup",
+      "execution_time_ms": 1271.8884944915771,
+      "steps_taken": 1,
+      "cached": false
+    },
+    "execution_time": 1.2719075679779053,
+    "cached": false,
+    "timestamp": "2026-01-11T06:49:13.672926",
+    "favorite": false
+  },
+  {
+    "id": "7e85b3e5-c305-4000-a24c-b1e5e3a896ca",
+    "query": "Compare molecular weight of aspirin and ibuprofen",
+    "result": {
+      "answer": "\u274c Query failed: Step 1 failed: Field not found: smiles in compound_data",
+      "success": false,
+      "error": null,
+      "intent_type": "property_calculation",
+      "execution_time_ms": 12.125015258789062,
+      "steps_taken": 3,
+      "cached": false
+    },
+    "execution_time": 0.01214289665222168,
+    "cached": false,
+    "timestamp": "2026-01-11T06:41:52.815389",
+    "favorite": false
+  },
+  {
+    "id": "9e865b77-6005-4abb-807b-2ba5cce0074d",
+    "query": "What targets does ibuprofen bind to?",
+    "result": {
+      "answer": "## Target Information\n\n",
+      "success": true,
+      "error": null,
+      "intent_type": "target_lookup",
+      "execution_time_ms": 4279.6032428741455,
+      "steps_taken": 1,
+      "cached": false
+    },
+    "execution_time": 4.279619216918945,
+    "cached": false,
+    "timestamp": "2026-01-11T06:38:19.543376",
+    "favorite": false
+  },
+  {
+    "id": "74dbc8a5-dbef-4648-9467-c145bc07caaa",
+    "query": "Compare molecular weight of aspirin and ibuprofen",
+    "result": {
+      "answer": "\u274c Query failed: Step 1 failed: Field not found: smiles in compound_data",
+      "success": false,
+      "error": null,
+      "intent_type": "property_calculation",
+      "execution_time_ms": 11.890172958374023,
+      "steps_taken": 3,
+      "cached": false
+    },
+    "execution_time": 0.011908292770385742,
+    "cached": false,
+    "timestamp": "2026-01-11T06:37:01.345376",
+    "favorite": false
+  },
+  {
+    "id": "cd5faa2d-a8e2-45b9-8eb3-a236573814ab",
+    "query": "Find similar compounds to aspirin",
+    "result": {
+      "answer": "## Similarity Search Results\n\n**Query SMILES:** `CC(=O)Oc1ccccc1C(=O)O`\n\n**Threshold:** 0.7\n\n**Found:** 3 similar compounds\n\n### Top Matches\n\n",
+      "success": true,
+      "error": null,
+      "intent_type": "similarity_search",
+      "execution_time_ms": 11.136770248413086,
+      "steps_taken": 3,
+      "cached": false
+    },
+    "execution_time": 0.011158466339111328,
+    "cached": false,
+    "timestamp": "2026-01-11T06:35:32.500067",
+    "favorite": false
+  },
+  {
+    "id": "e1fce240-4545-43ac-887f-accdf076ece9",
+    "query": "What is CHEMBL25?",
+    "result": {
+      "answer": "## 8-hour bayer\n\n**ChEMBL ID:** CHEMBL25\n\n**SMILES:** `CC(=O)Oc1ccccc1C(=O)O`\n\n### Properties\n\n- **Molecular Weight:** 180.16 Da\n- **ALogP:** 1.31\n- **Polar Surface Area:** 63.60 \u0172\n- **Formula:** C9H8O4\n\n### Identifiers\n\n- **InChI Key:** `BSYNRYMUTXBXSQ-UHFFFAOYSA-N`\n- **InChI:** `InChI=1S/C9H8O4/c1-6(10)13-8-5-3-2-4-7(8)9(11)12/h...`\n\n### Synonyms\n\n8-hour bayer, Acetosalic acid, Acetylsalic acid, Acetyl salicylate, Acetylsalicylic acid, Acetylsalicylic acid, Acetylsalicylic acid (who-ip), Acetylsalicylicum acidum, Acidum acetylsalicylicum, Acidum acetylsalicylicum (who-ip)\n",
+      "success": true,
+      "error": null,
+      "intent_type": "compound_lookup",
+      "execution_time_ms": 4.977226257324219,
+      "steps_taken": 1,
+      "cached": false
+    },
+    "execution_time": 0.004992485046386719,
+    "cached": false,
+    "timestamp": "2026-01-11T06:33:53.072670",
+    "favorite": false
+  }
+]

@@ -594,13 +594,15 @@ class QueryPlanner:
         
         # Get activities
         if compound_ref:
+            activity_args = {"chembl_id": compound_ref}
+            if "activity_type" in entities:
+                # Map activity_type to target_type for the tool
+                activity_args["target_type"] = entities["activity_type"]
+            
             activity_step = PlanStep(
                 step_id=self._next_step_id(),
                 tool_name="chembl_get_activities",
-                args={
-                    "chembl_id": compound_ref,
-                    "activity_type": entities.get("activity_type")
-                },
+                args=activity_args,
                 depends_on=[steps[-1].step_id] if steps else [],
                 can_run_parallel=False,
                 output_name="activities",

@@ -135,7 +135,8 @@ class IntentParser:
                 {"intent": IntentType.SIMILARITY_SEARCH, "entity_extractors": ["compound", "threshold", "limit"]}
             ),
             (
-                r"(similar|analogs?).*(to|of)\s+(?P<smiles>[A-Z][A-Za-z0-9@+\-\[\]()=#]+)",
+                # Only match SMILES-like strings (must have special chars or numbers)
+                r"(similar|analogs?).*(to|of)\s+(?P<smiles>[A-Z][A-Za-z0-9@+\-\[\]()=#]*[\[\]()=#@+\d][A-Za-z0-9@+\-\[\]()=#]+)",
                 {"intent": IntentType.SIMILARITY_SEARCH, "entity_extractors": ["smiles", "threshold"]}
             ),
             (
@@ -570,7 +571,8 @@ class IntentParser:
         common_drugs = [
             "aspirin", "ibuprofen", "acetaminophen", "paracetamol",
             "caffeine", "morphine", "cocaine", "warfarin", "insulin",
-            "penicillin", "metformin", "lipitor", "viagra", "prozac"
+            "penicillin", "metformin", "lipitor", "viagra", "prozac",
+            "diazepam", "amoxicillin", "atorvastatin", "simvastatin"
         ]
         
         for drug in common_drugs:
@@ -590,7 +592,8 @@ class IntentParser:
         common_drugs = [
             "aspirin", "ibuprofen", "acetaminophen", "paracetamol",
             "caffeine", "morphine", "cocaine", "warfarin", "insulin",
-            "penicillin", "metformin", "lipitor", "viagra", "prozac"
+            "penicillin", "metformin", "lipitor", "viagra", "prozac",
+            "diazepam", "amoxicillin", "atorvastatin", "simvastatin"
         ]
         
         compounds = []

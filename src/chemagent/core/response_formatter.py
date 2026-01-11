@@ -66,8 +66,21 @@ class ResponseFormatter:
     
     def _format_error(self, result: ExecutionResult) -> str:
         """Format error message."""
-        error_msg = result.error or "Unknown error"
-        return f"❌ Query failed: {error_msg}"
+        error_msg = result.error or "Unknown error - query execution failed"
+        
+        # Provide user-friendly explanations for common errors
+        if "Field not found" in error_msg:
+            error_msg += "\n\n💡 **Tip:** This may be due to an unexpected data structure. Try using a ChEMBL ID instead of a compound name."
+        elif "got an unexpected keyword argument" in error_msg:
+            error_msg += "\n\n💡 **Tip:** This query type may have a configuration issue. Please report this."
+        elif "SMILES Parse Error" in error_msg or "Invalid SMILES" in error_msg:
+            error_msg += "\n\n💡 **Tip:** The compound name could not be converted to a chemical structure. Try using a ChEMBL ID (e.g., CHEMBL25) or SMILES string instead."
+        elif "Empty query provided" in error_msg:
+            error_msg = "Empty query - please provide a valid query string."
+        elif error_msg == "Unknown error - query execution failed":
+            error_msg = "Query execution failed. This may be due to an API timeout or internal error. Please try again."
+        
+        return f"❌ {error_msg}"
     
     def _format_generic(self, data: Any) -> str:
         """Generic formatter for unhandled intent types."""

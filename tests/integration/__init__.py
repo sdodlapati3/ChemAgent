@@ -1,3 +1,5 @@
-"""Integration tests package."""
+"""
+Integration Tests
 
-# This file makes the directory a Python package
+This directory contains comprehensive integration tests that simulate real frontend user interactions.
+"""

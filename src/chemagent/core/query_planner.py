@@ -237,7 +237,7 @@ class QueryPlanner:
                 estimated_time_ms=50
             )
             steps.append(standardize_step)
-            smiles_ref = "$standardized.smiles"
+            smiles_ref = "$standardized.canonical_smiles"
         
         # Step 3: Similarity search
         similarity_step = PlanStep(
@@ -300,7 +300,7 @@ class QueryPlanner:
             search_step = PlanStep(
                 step_id=self._next_step_id(),
                 tool_name="chembl_substructure_search",
-                args={"smarts": smarts, "limit": entities.get("limit", 100)},
+                args={"smiles": smarts, "limit": entities.get("limit", 100)},
                 depends_on=[],
                 can_run_parallel=False,
                 output_name="matches",
@@ -590,7 +590,7 @@ class QueryPlanner:
                 estimated_time_ms=500
             )
             steps.append(lookup_step)
-            compound_ref = "$compound_data.chembl_id"
+            compound_ref = "$compound_data.compounds[0].chembl_id"
         
         # Get activities
         if compound_ref:
@@ -633,7 +633,7 @@ class QueryPlanner:
                 tool_name="rdkit_convert_format",
                 args={
                     "smiles": entities["smiles"],
-                    "target_format": entities.get("format", "inchi")
+                    "to_format": entities.get("format", "inchi")
                 },
                 depends_on=[],
                 can_run_parallel=False,

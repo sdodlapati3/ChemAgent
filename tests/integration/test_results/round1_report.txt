@@ -1,0 +1,56 @@
+
+======================================================================
+COMPREHENSIVE TEST REPORT - ROUND 1
+======================================================================
+
+Overall Results:
+  Total Queries:    98
+  Successful:       67 (68.4%)
+  Failed:           31 (31.6%)
+
+Performance Metrics:
+  Average Time:     214.69ms
+  Min Time:         0.00ms
+  Max Time:         16400.40ms
+  
+Intent Recognition:
+  similarity_search           18 queries
+  property_calculation        16 queries
+  unknown                     16 queries
+  comparison                  11 queries
+  target_lookup               11 queries
+  compound_lookup             10 queries
+  lipinski_check               7 queries
+  structure_conversion         5 queries
+  substructure_search          2 queries
+  activity_lookup              2 queries
+
+  Intent Accuracy:  82.7% (81/98)
+
+Error Analysis:
+  can only join an iterable                   3 occurrences
+  Empty query provided                        2 occurrences
+
+Sample Failed Queries (first 10):
+  [8] Search for analogs of omeprazole...
+      Error: None
+  [9] Search for analogs of morphine...
+      Error: None
+  [10] Search for analogs of amoxicillin...
+      Error: None
+  [13] Find compounds with benzene group...
+      Error: None
+  [15] Compare molecular weight of metformin and insulin...
+      Error: None
+  [18] Search for analogs of warfarin...
+      Error: None
+  [21] What is the IC50 of penicillin?...
+      Error: None
+  [23] What compounds are similar to omeprazole?...
+      Error: None
+  [24] What compounds are similar to amoxicillin?...
+      Error: None
+  [26] Convert CC(C)Cc1ccc(cc1)C(C)C(=O)O to InChI...
+      Error: None
+
+======================================================================

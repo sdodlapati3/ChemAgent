@@ -322,15 +322,16 @@ def create_app() -> gr.Blocks:
     """
     ui = ChemAgentUI()
     
+    # Custom CSS for styling
+    custom_css = """
+    .container { max-width: 1400px; margin: auto; }
+    .query-box { font-size: 16px; }
+    .result-box { font-family: monospace; font-size: 14px; }
+    .history-item { padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin: 5px 0; }
+    """
+    
     with gr.Blocks(
-        title="ChemAgent - Pharmaceutical Research Assistant",
-        theme=gr.themes.Soft(),
-        css="""
-        .container { max-width: 1400px; margin: auto; }
-        .query-box { font-size: 16px; }
-        .result-box { font-family: monospace; font-size: 14px; }
-        .history-item { padding: 10px; border: 1px solid #ddd; border-radius: 5px; margin: 5px 0; }
-        """
+        title="ChemAgent - Pharmaceutical Research Assistant"
     ) as app:
         
         gr.Markdown("""
@@ -552,6 +553,8 @@ def launch_app(
         **kwargs: Additional Gradio launch arguments
     """
     app = create_app()
+    
+    # Apply theme and CSS during launch (Gradio 6.0+)
     app.launch(
         server_name=server_name,
         server_port=server_port,

@@ -29,6 +29,14 @@ from chemagent.core.executor import QueryExecutor, ToolRegistry
 from chemagent.caching import ResultCache, add_caching_to_registry
 from chemagent.config import get_config, load_dotenv_if_exists
 
+# Import HybridIntentParser for LLM-enhanced parsing
+try:
+    from chemagent.core.llm_router import HybridIntentParser, LLMRouter
+    LLM_AVAILABLE = True
+except ImportError:
+    LLM_AVAILABLE = False
+    HybridIntentParser = None
+
 
 # ============================================================================
 # Pydantic Models
@@ -214,15 +222,43 @@ class ChemAgentState:
         self.planner = None
         self.executor = None
         self.cache = None
+        self.llm_router = None
         self.initialized = False
+        self.llm_enabled = False
     
-    def initialize(self, use_real_tools: bool = True, enable_cache: bool = True):
+    def initialize(self, use_real_tools: bool = True, enable_cache: bool = True, enable_llm: bool = True):
         """Initialize ChemAgent components"""
         if self.initialized:
             return
         
         try:
-            self.parser = IntentParser()
+            # Use HybridIntentParser if LLM is available and enabled
+            pattern_parser = IntentParser()
+            
+            if LLM_AVAILABLE and enable_llm:
+                try:
+                    self.llm_router = LLMRouter()
+                    self.parser = HybridIntentParser(
+                        pattern_parser=pattern_parser,
+                        llm_router=self.llm_router,
+                        enable_llm=True,
+                        confidence_threshold=0.8
+                    )
+                    self.llm_enabled = True
+                    import logging
+                    logging.getLogger(__name__).info(
+                        "LLM-enhanced parsing enabled (primary: %s)",
+                        self.llm_router.primary_model
+                    )
+                except Exception as e:
+                    import logging
+                    logging.getLogger(__name__).warning(
+                        "LLM initialization failed, using pattern-only: %s", e
+                    )
+                    self.parser = pattern_parser
+            else:
+                self.parser = pattern_parser
+            
             self.planner = QueryPlanner()
             
             registry = ToolRegistry(use_real_tools=use_real_tools)
@@ -252,7 +288,12 @@ async def startup_event():
     """Initialize application on startup"""
     use_real_tools = os.getenv("CHEMAGENT_USE_REAL_TOOLS", "true").lower() == "true"
     enable_cache = os.getenv("CHEMAGENT_ENABLE_CACHE", "true").lower() == "true"
-    state.initialize(use_real_tools=use_real_tools, enable_cache=enable_cache)
+    enable_llm = os.getenv("CHEMAGENT_ENABLE_LLM", "true").lower() == "true"
+    state.initialize(
+        use_real_tools=use_real_tools,
+        enable_cache=enable_cache,
+        enable_llm=enable_llm
+    )
 
 
 def get_chemagent():

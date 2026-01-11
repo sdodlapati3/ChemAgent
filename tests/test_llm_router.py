@@ -110,7 +110,7 @@ class TestLLMRouter:
         
         router = LLMRouter()
         
-        assert router.primary_model == "groq/llama3-8b-8192"
+        assert router.primary_model == "groq/llama-3.1-8b-instant"
         assert len(router.fallback_models) == 2
         assert router.confidence_threshold == 0.8
     
@@ -165,7 +165,7 @@ class TestLLMRouter:
         repr_str = repr(router)
         
         assert "LLMRouter" in repr_str
-        assert "groq/llama3-8b-8192" in repr_str
+        assert "groq/llama-3.1-8b-instant" in repr_str
     
     def test_stats_tracking(self):
         """Test statistics are tracked."""

@@ -32,11 +32,23 @@ import logging
 import os
 import time
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Dict, List, Optional
 
 from .intent_parser import IntentType, ParsedIntent
 
 logger = logging.getLogger(__name__)
+
+# Auto-load .env file from project root
+try:
+    from dotenv import load_dotenv
+    # Find .env in project root (3 levels up from this file)
+    env_path = Path(__file__).parent.parent.parent.parent / ".env"
+    if env_path.exists():
+        load_dotenv(env_path)
+        logger.debug(f"Loaded API keys from {env_path}")
+except ImportError:
+    pass  # dotenv not required, keys can be set manually
 
 # Check if litellm is available
 try:
@@ -174,11 +186,14 @@ class LLMRouter:
         <IntentType.SIMILARITY_SEARCH: 'similarity_search'>
     """
     
-    # Default models (all have free tiers)
-    DEFAULT_PRIMARY = "groq/llama3-8b-8192"
+    # Default models (all have free tiers) - Updated January 2026
+    # Groq: llama-3.3-70b-versatile (free), llama-3.1-8b-instant (free)
+    # Gemini: gemini-2.0-flash (free), gemini-1.5-flash (free)
+    # OpenRouter: Many free models available
+    DEFAULT_PRIMARY = "groq/llama-3.1-8b-instant"
     DEFAULT_FALLBACKS = [
-        "gemini/gemini-1.5-flash-8b",
-        "together_ai/meta-llama/Llama-3-8B-Instruct-Turbo"
+        "gemini/gemini-2.0-flash",
+        "openrouter/google/gemini-2.0-flash-exp:free"
     ]
     
     def __init__(
@@ -255,6 +270,9 @@ class LLMRouter:
         self.stats.total_queries += 1
         
         try:
+            # Configure litellm to drop unsupported params for fallback providers
+            litellm.drop_params = True
+            
             # Call LLM with automatic fallback
             response = completion(
                 model=self.primary_model,
@@ -267,7 +285,8 @@ class LLMRouter:
                 timeout=self.timeout,
                 temperature=0.0,  # Deterministic for parsing
                 max_tokens=300,
-                response_format={"type": "json_object"} if "groq" in self.primary_model else None
+                # Note: response_format removed for broader compatibility
+                # The system prompt instructs JSON output instead
             )
             
             # Track latency

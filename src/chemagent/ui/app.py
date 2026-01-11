@@ -15,14 +15,27 @@ from .visualizer import ResultVisualizer
 
 
 class ChemAgentUI:
-    """Gradio UI for ChemAgent."""
+    """Gradio UI for ChemAgent with LLM-enhanced parsing."""
     
-    def __init__(self):
-        """Initialize UI with agent and components."""
-        self.agent = ChemAgent()
+    def __init__(self, enable_llm: bool = True):
+        """Initialize UI with agent and components.
+        
+        Args:
+            enable_llm: Enable LLM fallback for complex queries (default: True)
+        """
+        self.agent = ChemAgent(enable_llm=enable_llm)
         self.config = get_config()
         self.history_manager = HistoryManager()
         self.visualizer = ResultVisualizer()
+        self.llm_enabled = self.agent.llm_enabled
+        
+    def get_status_info(self) -> str:
+        """Get current agent status information."""
+        mode = "🤖 LLM-Enhanced" if self.llm_enabled else "📋 Pattern-Only"
+        if self.llm_enabled and self.agent.llm_router:
+            model = self.agent.llm_router.primary_model
+            return f"{mode} (Model: {model})"
+        return mode
         
     def process_query(
         self,

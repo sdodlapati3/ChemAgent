@@ -44,6 +44,15 @@ from chemagent.core import (
 )
 from chemagent.caching import ResultCache, add_caching_to_registry
 
+# Import HybridIntentParser for LLM-enhanced parsing
+try:
+    from chemagent.core.llm_router import HybridIntentParser, LLMRouter
+    LLM_AVAILABLE = True
+except ImportError:
+    LLM_AVAILABLE = False
+    HybridIntentParser = None
+    LLMRouter = None
+
 # Tool imports
 from chemagent.tools.rdkit_tools import RDKitTools
 from chemagent.tools.chembl_client import ChEMBLClient
@@ -95,6 +104,7 @@ class ChemAgent:
     Main entry point for ChemAgent.
     
     Provides a simple, unified interface for all functionality.
+    Now with LLM-enhanced intent parsing for complex queries.
     
     Example:
         >>> agent = ChemAgent()
@@ -109,7 +119,9 @@ class ChemAgent:
         use_cache: bool = True,
         cache_ttl: int = 3600,
         enable_parallel: bool = True,
-        max_workers: int = 4
+        max_workers: int = 4,
+        enable_llm: bool = True,
+        llm_confidence_threshold: float = 0.8
     ):
         """
         Initialize ChemAgent.
@@ -120,9 +132,38 @@ class ChemAgent:
             cache_ttl: Cache time-to-live in seconds (default: 3600)
             enable_parallel: Enable parallel execution (default: True)
             max_workers: Maximum parallel workers (default: 4)
+            enable_llm: Enable LLM fallback for complex queries (default: True)
+            llm_confidence_threshold: Confidence threshold below which LLM is used (default: 0.8)
         """
-        # Initialize core components
-        self.parser = IntentParser()
+        # Initialize pattern-based parser first
+        pattern_parser = IntentParser()
+        
+        # Use HybridIntentParser if LLM is available and enabled
+        self.llm_router = None
+        self.llm_enabled = False
+        
+        if LLM_AVAILABLE and enable_llm:
+            try:
+                self.llm_router = LLMRouter()
+                self.parser = HybridIntentParser(
+                    pattern_parser=pattern_parser,
+                    llm_router=self.llm_router,
+                    enable_llm=True,
+                    confidence_threshold=llm_confidence_threshold
+                )
+                self.llm_enabled = True
+                logger.info(
+                    "LLM-enhanced parsing enabled (primary: %s)",
+                    self.llm_router.primary_model
+                )
+            except Exception as e:
+                logger.warning("LLM initialization failed, using pattern-only: %s", e)
+                self.parser = pattern_parser
+        else:
+            self.parser = pattern_parser
+            if not LLM_AVAILABLE:
+                logger.debug("LLM not available (litellm not installed)")
+        
         self.planner = QueryPlanner()
         self.formatter = ResponseFormatter()
         

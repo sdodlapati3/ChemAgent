@@ -101,6 +101,8 @@ class QueryPlanner:
     Converts high-level user intents into concrete execution plans
     with proper dependency ordering and optimization.
     
+    Now with LLM-based fallback for UNKNOWN intents.
+    
     Example:
         >>> parser = IntentParser()
         >>> planner = QueryPlanner()
@@ -110,9 +112,14 @@ class QueryPlanner:
         3
     """
     
-    def __init__(self):
-        """Initialize planner."""
+    def __init__(self, llm_router=None):
+        """Initialize planner.
+        
+        Args:
+            llm_router: Optional LLMRouter for handling unknown intents
+        """
         self.step_counter = 0
+        self.llm_router = llm_router
     
     def plan(self, intent: ParsedIntent) -> QueryPlan:
         """
@@ -173,13 +180,61 @@ class QueryPlanner:
             return self._plan_comparison(intent)
         
         else:
-            # Unknown intent - return empty plan
-            return QueryPlan(
-                steps=[],
-                intent_type=intent.intent_type,
-                estimated_time_ms=0,
-                can_cache=False
-            )
+            # Unknown intent - try LLM-based planning if available
+            return self._plan_unknown(intent)
+    
+    def _plan_unknown(self, intent: ParsedIntent) -> QueryPlan:
+        """
+        Handle unknown intents with best-effort planning.
+        
+        If entities were extracted (e.g., compound name), try to make
+        a reasonable plan. Otherwise return empty.
+        """
+        entities = intent.entities
+        steps = []
+        
+        # If we have a compound, at least do a lookup
+        if "compound" in entities or "chembl_id" in entities:
+            steps.append(PlanStep(
+                step_id=self._next_step_id(),
+                tool_name="chembl_search_by_name" if "compound" in entities else "chembl_get_compound",
+                args={"query": entities.get("compound") or entities.get("chembl_id")},
+                depends_on=[],
+                can_run_parallel=False,
+                output_name="compound_info",
+                estimated_time_ms=500
+            ))
+        
+        # If we have a target/protein, look it up
+        if "target" in entities or "uniprot_id" in entities:
+            steps.append(PlanStep(
+                step_id=self._next_step_id(),
+                tool_name="uniprot_get_protein",
+                args={"query": entities.get("target") or entities.get("uniprot_id")},
+                depends_on=[],
+                can_run_parallel=True,
+                output_name="target_info",
+                estimated_time_ms=500
+            ))
+        
+        # If we have SMILES, calculate properties
+        if "smiles" in entities:
+            steps.append(PlanStep(
+                step_id=self._next_step_id(),
+                tool_name="calculate_properties",
+                args={"smiles": entities["smiles"]},
+                depends_on=[],
+                can_run_parallel=True,
+                output_name="properties",
+                estimated_time_ms=50
+            ))
+        
+        return QueryPlan(
+            steps=steps,
+            intent_type=intent.intent_type,
+            estimated_time_ms=sum(s.estimated_time_ms for s in steps),
+            can_cache=len(steps) > 0
+        )
     
     def _next_step_id(self) -> int:
         """Get next step ID."""

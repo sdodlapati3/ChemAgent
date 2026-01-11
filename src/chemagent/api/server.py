@@ -26,6 +26,7 @@ from pydantic import BaseModel, Field, validator
 from chemagent.core.intent_parser import IntentParser
 from chemagent.core.query_planner import QueryPlanner
 from chemagent.core.executor import QueryExecutor, ToolRegistry
+from chemagent.core.response_formatter import ResponseFormatter
 from chemagent.caching import ResultCache, add_caching_to_registry
 from chemagent.config import get_config, load_dotenv_if_exists
 
@@ -221,6 +222,7 @@ class ChemAgentState:
         self.parser = None
         self.planner = None
         self.executor = None
+        self.formatter = None
         self.cache = None
         self.llm_router = None
         self.initialized = False
@@ -274,6 +276,7 @@ class ChemAgentState:
                 enable_parallel=True,
                 max_workers=4
             )
+            self.formatter = ResponseFormatter()
             self.initialized = True
             
         except Exception as e:
@@ -378,12 +381,18 @@ async def process_query(request: QueryRequest):
         
         execution_time = (time.time() - start_time) * 1000
         
-        # Build response
+        # Format the response using ResponseFormatter for human-readable answer
+        formatted_answer = state.formatter.format(parsed, result)
+        
+        # Build response with both raw and formatted data
         response_data = {
-            "status": result.status,
+            "status": "success" if result.status.value == "completed" else result.status.value,
             "query": request.query,
             "intent": parsed.intent_type.value,
-            "result": result.result,
+            "result": {
+                "answer": formatted_answer,
+                "raw_data": result.final_output
+            },
             "execution_time_ms": execution_time,
             "cached": False,  # TODO: Track cache hits in execution
             "error": result.error
@@ -401,7 +410,7 @@ async def process_query(request: QueryRequest):
                     "steps": [
                         {
                             "tool": step.tool_name,
-                            "dependencies": step.dependencies
+                            "dependencies": step.depends_on
                         }
                         for step in plan.steps
                     ]

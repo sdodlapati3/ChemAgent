@@ -1,5 +1,22 @@
 [
   {
+    "id": "01c2d4aa-979f-499a-b606-81ed0c327286",
+    "query": "What is CHEMBL25?",
+    "result": {
+      "answer": "## 8-hour bayer\n\n**ChEMBL ID:** CHEMBL25\n\n**SMILES:** `CC(=O)Oc1ccccc1C(=O)O`\n\n### Properties\n\n- **Molecular Weight:** 180.16 Da\n- **ALogP:** 1.31\n- **Polar Surface Area:** 63.60 \u0172\n- **Formula:** C9H8O4\n\n### Identifiers\n\n- **InChI Key:** `BSYNRYMUTXBXSQ-UHFFFAOYSA-N`\n- **InChI:** `InChI=1S/C9H8O4/c1-6(10)13-8-5-3-2-4-7(8)9(11)12/h...`\n\n### Synonyms\n\n8-hour bayer, Acetosalic acid, Acetylsalic acid, Acetyl salicylate, Acetylsalicylic acid, Acetylsalicylic acid, Acetylsalicylic acid (who-ip), Acetylsalicylicum acidum, Acidum acetylsalicylicum, Acidum acetylsalicylicum (who-ip)\n\n---\n\n### \ud83d\udcda Data Sources\n\n- **CHEMBL**: [CHEMBL25](https://www.ebi.ac.uk/chembl/compound_report_card/CHEMBL25)\n\n_Retrieved: 2026-01-11 23:38 UTC_\n",
+      "success": true,
+      "error": null,
+      "intent_type": "compound_lookup",
+      "execution_time_ms": 23.221492767333984,
+      "steps_taken": 1,
+      "cached": false
+    },
+    "execution_time": 0.023239850997924805,
+    "cached": false,
+    "timestamp": "2026-01-11T23:38:21.917758",
+    "favorite": false
+  },
+  {
     "id": "0b279c93-8a7b-4163-9964-48dfef31ef3b",
     "query": "What is CHEMBL25?",
     "result": {

@@ -750,9 +750,12 @@ class QueryPlanner:
         Plan comparison of multiple compounds.
         
         Steps:
-        1. Look up each compound
-        2. Calculate properties for each
-        3. Return for comparison formatting
+        1. Look up each compound (parallel)
+        2. Standardize SMILES for each (can be parallel across compounds)
+        3. Calculate properties for each (can be parallel across compounds)
+        4. Return for comparison formatting
+        
+        Optimization: Group steps by phase to maximize parallelization
         """
         steps = []
         entities = intent.entities
@@ -766,39 +769,46 @@ class QueryPlanner:
                 estimated_cost=0.0
             )
         
-        # Look up each compound and calculate properties
+        # Phase 1: Look up all compounds (can run in parallel)
+        lookup_step_ids = []
         for i, compound in enumerate(compounds):
-            # Lookup compound
             lookup_step = PlanStep(
                 step_id=self._next_step_id(),
                 tool_name="chembl_search_by_name",
                 args={"query": compound},
                 depends_on=[],
-                can_run_parallel=True if i > 0 else False,
+                can_run_parallel=True,  # All lookups can run in parallel
                 output_name=f"compound_{i}",
                 estimated_time_ms=500
             )
             steps.append(lookup_step)
-            
-            # Standardize SMILES
+            lookup_step_ids.append(lookup_step.step_id)
+        
+        # Phase 2: Standardize SMILES for each compound
+        # Each standardize depends only on its own lookup, so can run in parallel
+        standardize_step_ids = []
+        for i in range(len(compounds)):
             standardize_step = PlanStep(
                 step_id=self._next_step_id(),
                 tool_name="rdkit_standardize_smiles",
                 args={"smiles": f"$compound_{i}.compounds[0].smiles"},
-                depends_on=[lookup_step.step_id],
-                can_run_parallel=False,
+                depends_on=[lookup_step_ids[i]],
+                can_run_parallel=True,  # Can run in parallel with other standardizations
                 output_name=f"standardized_{i}",
                 estimated_time_ms=50
             )
             steps.append(standardize_step)
-            
-            # Calculate properties
+            standardize_step_ids.append(standardize_step.step_id)
+        
+        # Phase 3: Calculate properties for each compound
+        # Each calc depends only on its own standardization, so can run in parallel
+        for i in range(len(compounds)):
             props_step = PlanStep(
                 step_id=self._next_step_id(),
                 tool_name="rdkit_calc_properties",
                 args={"smiles": f"$standardized_{i}.smiles"},
-                depends_on=[standardize_step.step_id],
-                can_run_parallel=False,
+                depends_on=[standardize_step_ids[i]],
+                can_run_parallel=True,  # Can run in parallel with other calculations
                 output_name=f"properties_{i}",
                 estimated_time_ms=100
             )

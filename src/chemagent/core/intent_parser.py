@@ -567,12 +567,53 @@ class IntentParser:
     
     def _extract_compound(self, query: str, query_lower: str) -> Optional[str]:
         """Extract compound name from query."""
-        # Common drug names
+        # Common drug names (top FDA-approved and research compounds)
         common_drugs = [
+            # Original core drugs
             "aspirin", "ibuprofen", "acetaminophen", "paracetamol",
             "caffeine", "morphine", "cocaine", "warfarin", "insulin",
             "penicillin", "metformin", "lipitor", "viagra", "prozac",
-            "diazepam", "amoxicillin", "atorvastatin", "simvastatin"
+            "diazepam", "amoxicillin", "atorvastatin", "simvastatin",
+            
+            # Top prescribed drugs
+            "lisinopril", "levothyroxine", "azithromycin", "metoprolol",
+            "amlodipine", "omeprazole", "albuterol", "losartan",
+            "gabapentin", "hydrochlorothiazide", "sertraline", "furosemide",
+            "prednisone", "tramadol", "montelukast", "escitalopram",
+            "rosuvastatin", "clopidogrel", "tamsulosin", "pantoprazole",
+            
+            # Common antibiotics and antivirals
+            "ciprofloxacin", "doxycycline", "cephalexin", "metronidazole",
+            "acyclovir", "valacyclovir", "oseltamivir", "ribavirin",
+            
+            # Cardiovascular drugs
+            "carvedilol", "diltiazem", "verapamil", "digoxin",
+            "spironolactone", "enalapril", "ramipril", "candesartan",
+            
+            # CNS/Psychiatric drugs
+            "fluoxetine", "paroxetine", "venlafaxine", "duloxetine",
+            "bupropion", "mirtazapine", "quetiapine", "risperidone",
+            "alprazolam", "lorazepam", "clonazepam", "zolpidem",
+            
+            # Diabetes drugs
+            "glipizide", "glyburide", "pioglitazone", "sitagliptin",
+            "empagliflozin", "liraglutide", "semaglutide",
+            
+            # Pain/Inflammation
+            "naproxen", "celecoxib", "meloxicam", "indomethacin",
+            "diclofenac", "ketorolac", "codeine", "oxycodone",
+            
+            # Respiratory
+            "fluticasone", "budesonide", "salmeterol", "formoterol",
+            "tiotropium", "ipratropium",
+            
+            # GI drugs
+            "lansoprazole", "esomeprazole", "ranitidine", "famotidine",
+            "ondansetron", "metoclopramide",
+            
+            # Other common
+            "levothyroxine", "synthroid", "advair", "nexium",
+            "cymbalta", "lyrica", "xarelto", "eliquis"
         ]
         
         for drug in common_drugs:
@@ -588,12 +629,53 @@ class IntentParser:
     
     def _extract_compounds(self, query: str, query_lower: str) -> Optional[List[str]]:
         """Extract multiple compound names from comparison query."""
-        # Common drug names
+        # Common drug names (same list as _extract_compound)
         common_drugs = [
+            # Original core drugs
             "aspirin", "ibuprofen", "acetaminophen", "paracetamol",
             "caffeine", "morphine", "cocaine", "warfarin", "insulin",
             "penicillin", "metformin", "lipitor", "viagra", "prozac",
-            "diazepam", "amoxicillin", "atorvastatin", "simvastatin"
+            "diazepam", "amoxicillin", "atorvastatin", "simvastatin",
+            
+            # Top prescribed drugs
+            "lisinopril", "levothyroxine", "azithromycin", "metoprolol",
+            "amlodipine", "omeprazole", "albuterol", "losartan",
+            "gabapentin", "hydrochlorothiazide", "sertraline", "furosemide",
+            "prednisone", "tramadol", "montelukast", "escitalopram",
+            "rosuvastatin", "clopidogrel", "tamsulosin", "pantoprazole",
+            
+            # Common antibiotics and antivirals
+            "ciprofloxacin", "doxycycline", "cephalexin", "metronidazole",
+            "acyclovir", "valacyclovir", "oseltamivir", "ribavirin",
+            
+            # Cardiovascular drugs
+            "carvedilol", "diltiazem", "verapamil", "digoxin",
+            "spironolactone", "enalapril", "ramipril", "candesartan",
+            
+            # CNS/Psychiatric drugs
+            "fluoxetine", "paroxetine", "venlafaxine", "duloxetine",
+            "bupropion", "mirtazapine", "quetiapine", "risperidone",
+            "alprazolam", "lorazepam", "clonazepam", "zolpidem",
+            
+            # Diabetes drugs
+            "glipizide", "glyburide", "pioglitazone", "sitagliptin",
+            "empagliflozin", "liraglutide", "semaglutide",
+            
+            # Pain/Inflammation
+            "naproxen", "celecoxib", "meloxicam", "indomethacin",
+            "diclofenac", "ketorolac", "codeine", "oxycodone",
+            
+            # Respiratory
+            "fluticasone", "budesonide", "salmeterol", "formoterol",
+            "tiotropium", "ipratropium",
+            
+            # GI drugs
+            "lansoprazole", "esomeprazole", "ranitidine", "famotidine",
+            "ondansetron", "metoclopramide",
+            
+            # Other common
+            "levothyroxine", "synthroid", "advair", "nexium",
+            "cymbalta", "lyrica", "xarelto", "eliquis"
         ]
         
         compounds = []

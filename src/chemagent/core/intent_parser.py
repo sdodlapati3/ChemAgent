@@ -38,6 +38,15 @@ class IntentType(Enum):
     BATCH_ANALYSIS = "batch_analysis"
     COMPARISON = "comparison"
     
+    # Disease/Target association intents (Open Targets)
+    DISEASE_TARGET_LOOKUP = "disease_target_lookup"
+    TARGET_DISEASE_LOOKUP = "target_disease_lookup"
+    TARGET_DRUG_LOOKUP = "target_drug_lookup"
+    
+    # Structure intents (PDB/AlphaFold)
+    STRUCTURE_LOOKUP = "structure_lookup"
+    ALPHAFOLD_LOOKUP = "alphafold_lookup"
+    
     # Unknown/fallback
     UNKNOWN = "unknown"
 
@@ -459,6 +468,94 @@ class IntentParser:
                 r"(format|represent).*(as|to|in).*(smiles|inchi)",
                 {"intent": IntentType.STRUCTURE_CONVERSION, "entity_extractors": ["smiles", "format"]}
             ),
+            
+            # ============================================================
+            # DISEASE-TARGET ASSOCIATIONS (Open Targets) (10 patterns)
+            # ============================================================
+            (
+                r"(targets?|genes?|proteins?).*(associated|linked|involved).*(with|in)\s+(\w+\s+)?(cancer|disease|disorder|syndrome|alzheimer|parkinson|diabetes)",
+                {"intent": IntentType.DISEASE_TARGET_LOOKUP, "entity_extractors": ["disease"]}
+            ),
+            (
+                r"what.*(targets?|genes?|proteins?).*(are|is).*(associated|linked|involved).*(with|in)",
+                {"intent": IntentType.DISEASE_TARGET_LOOKUP, "entity_extractors": ["disease"]}
+            ),
+            (
+                r"(find|search|get).*(diseases?).*(linked|associated|related).*(to|with)\s+(?P<target>\w+)",
+                {"intent": IntentType.TARGET_DISEASE_LOOKUP, "entity_extractors": ["target"]}
+            ),
+            (
+                r"(disease|diseases).*(linked|associated|related).*(to|with)\s+(?P<target>BRCA[12]?|EGFR|TP53|HER2|BRAF|KRAS|APC|PTEN|RB1|ATM)",
+                {"intent": IntentType.TARGET_DISEASE_LOOKUP, "entity_extractors": ["target"]}
+            ),
+            (
+                r"what.*(diseases?).*(are|is).*(caused|associated|linked).*(by|with|to)",
+                {"intent": IntentType.TARGET_DISEASE_LOOKUP, "entity_extractors": ["target"]}
+            ),
+            (
+                r"(drugs?|compounds?).*(targeting|target|for)\s+(?P<target>EGFR|BRAF|HER2|PD-?1|PD-?L1|KRAS|ALK|RET|MEK|BCR-ABL|\w+)",
+                {"intent": IntentType.TARGET_DRUG_LOOKUP, "entity_extractors": ["target"]}
+            ),
+            (
+                r"what.*(drugs?).*(target|targets?|targeting)\s+(?P<target>\w+)",
+                {"intent": IntentType.TARGET_DRUG_LOOKUP, "entity_extractors": ["target"]}
+            ),
+            (
+                r"(therapeutic|drug).*(targets?).*(for|in)\s+(?P<disease>\w+.*(cancer|disease|disorder|syndrome))",
+                {"intent": IntentType.DISEASE_TARGET_LOOKUP, "entity_extractors": ["disease"]}
+            ),
+            (
+                r"(cancer|diabetes|alzheimer|parkinson|depression).*(treatment|therapy).*targets?",
+                {"intent": IntentType.DISEASE_TARGET_LOOKUP, "entity_extractors": ["disease"]}
+            ),
+            (
+                r"(treatments?|therapies?).*(targeting|for)\s+(?P<target>\w+)",
+                {"intent": IntentType.TARGET_DRUG_LOOKUP, "entity_extractors": ["target"]}
+            ),
+            
+            # ============================================================
+            # PROTEIN STRUCTURE (PDB/AlphaFold) (10 patterns)
+            # ============================================================
+            (
+                r"(3d|three.?d|crystal|cryo|xray|x-ray).*(structure|model).*(of|for)\s+(?P<target>\w+)",
+                {"intent": IntentType.STRUCTURE_LOOKUP, "entity_extractors": ["target", "pdb_id"]}
+            ),
+            (
+                r"(pdb|protein data bank).*(structure|entry).*(for|of)\s+(?P<target>\w+)",
+                {"intent": IntentType.STRUCTURE_LOOKUP, "entity_extractors": ["target", "pdb_id"]}
+            ),
+            (
+                r"(pdb|rcsb)\s*(id|entry|structure)?\s*(?P<pdb_id>\d[A-Z0-9]{3})",
+                {"intent": IntentType.STRUCTURE_LOOKUP, "entity_extractors": ["pdb_id"]}
+            ),
+            (
+                r"(get|show|find).*structure.*(of|for)\s+(?P<pdb_id>\d[A-Z0-9]{3})",
+                {"intent": IntentType.STRUCTURE_LOOKUP, "entity_extractors": ["pdb_id"]}
+            ),
+            (
+                r"(alphafold|af2?|predicted).*(structure|model).*(for|of)\s+(?P<target>\w+)",
+                {"intent": IntentType.ALPHAFOLD_LOOKUP, "entity_extractors": ["target", "uniprot_id"]}
+            ),
+            (
+                r"(structure|model).*(prediction|predicted).*(for|of)\s+(?P<target>\w+)",
+                {"intent": IntentType.ALPHAFOLD_LOOKUP, "entity_extractors": ["target", "uniprot_id"]}
+            ),
+            (
+                r"(get|show).*(alphafold).*(prediction|structure|model).*(?P<target>\w+)",
+                {"intent": IntentType.ALPHAFOLD_LOOKUP, "entity_extractors": ["target", "uniprot_id"]}
+            ),
+            (
+                r"alphafold.*(P\d{5}|[OPQ][0-9][A-Z0-9]{3}[0-9])",
+                {"intent": IntentType.ALPHAFOLD_LOOKUP, "entity_extractors": ["uniprot_id"]}
+            ),
+            (
+                r"(get|show|find).*(structure|model).*(P\d{5}|[OPQ][0-9][A-Z0-9]{3}[0-9])",
+                {"intent": IntentType.STRUCTURE_LOOKUP, "entity_extractors": ["uniprot_id"]}
+            ),
+            (
+                r"(protein|3d).*(structure).*(of|for).*(human|mouse|rat)?\s*(?P<target>[a-z][a-z0-9]+)",
+                {"intent": IntentType.STRUCTURE_LOOKUP, "entity_extractors": ["target"]}
+            ),
         ]
     
     def _extract_entities(
@@ -538,8 +635,54 @@ class IntentParser:
             elif extractor == "format":
                 if fmt := self._extract_format(query_lower):
                     entities["format"] = fmt
+            
+            elif extractor == "disease":
+                if disease := self._extract_disease(query_lower):
+                    entities["disease"] = disease
+            
+            elif extractor == "pdb_id":
+                if pdb_id := self._extract_pdb_id(query):
+                    entities["pdb_id"] = pdb_id
         
         return entities
+    
+    def _extract_disease(self, query_lower: str) -> Optional[str]:
+        """Extract disease name from query."""
+        # Common disease patterns
+        diseases = [
+            "cancer", "breast cancer", "lung cancer", "colon cancer", "prostate cancer",
+            "alzheimer", "parkinson", "diabetes", "obesity", "depression", "schizophrenia",
+            "arthritis", "asthma", "hypertension", "heart disease", "stroke",
+            "leukemia", "lymphoma", "melanoma", "glioblastoma", "neuroblastoma",
+            "inflammatory bowel disease", "crohn", "ulcerative colitis",
+            "multiple sclerosis", "lupus", "psoriasis", "eczema",
+            "hiv", "aids", "hepatitis", "malaria", "tuberculosis", "covid"
+        ]
+        
+        for disease in diseases:
+            if disease in query_lower:
+                return disease
+        
+        # Try to extract disease after common prepositions
+        disease_patterns = [
+            r"for\s+([a-z]+\s*(?:cancer|disease|disorder|syndrome))",
+            r"in\s+([a-z]+\s*(?:cancer|disease|disorder|syndrome))",
+            r"treat(?:ing|ment)?\s+(?:of\s+)?([a-z]+\s*(?:cancer|disease|disorder|syndrome))",
+        ]
+        
+        for pattern in disease_patterns:
+            if match := re.search(pattern, query_lower):
+                return match.group(1).strip()
+        
+        return None
+    
+    def _extract_pdb_id(self, query: str) -> Optional[str]:
+        """Extract PDB ID from query."""
+        # PDB IDs are 4 characters: number followed by alphanumeric
+        pattern = r"\b(\d[A-Z0-9]{3})\b"
+        if match := re.search(pattern, query.upper()):
+            return match.group(1)
+        return None
     
     def _extract_smiles(self, query: str) -> Optional[str]:
         """Extract SMILES from query."""

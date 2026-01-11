@@ -179,6 +179,21 @@ class QueryPlanner:
         elif intent.intent_type == IntentType.COMPARISON:
             return self._plan_comparison(intent)
         
+        elif intent.intent_type == IntentType.DISEASE_TARGET_LOOKUP:
+            return self._plan_disease_target_lookup(intent)
+        
+        elif intent.intent_type == IntentType.TARGET_DISEASE_LOOKUP:
+            return self._plan_target_disease_lookup(intent)
+        
+        elif intent.intent_type == IntentType.TARGET_DRUG_LOOKUP:
+            return self._plan_target_drug_lookup(intent)
+        
+        elif intent.intent_type == IntentType.STRUCTURE_LOOKUP:
+            return self._plan_structure_lookup(intent)
+        
+        elif intent.intent_type == IntentType.ALPHAFOLD_LOOKUP:
+            return self._plan_alphafold_lookup(intent)
+        
         else:
             # Unknown intent - try LLM-based planning if available
             return self._plan_unknown(intent)
@@ -874,4 +889,279 @@ class QueryPlanner:
             intent_type=intent.intent_type,
             estimated_time_ms=sum(s.estimated_time_ms for s in steps),
             estimated_cost=0.02
+        )
+    
+    # =========================================================================
+    # Open Targets Planning Methods
+    # =========================================================================
+    
+    def _plan_disease_target_lookup(self, intent: ParsedIntent) -> QueryPlan:
+        """
+        Plan disease-target association lookup using Open Targets.
+        
+        Steps:
+        1. Search for disease in Open Targets
+        2. Get targets associated with the disease
+        """
+        steps = []
+        entities = intent.entities
+        
+        disease = entities.get("disease", "")
+        
+        if not disease:
+            return QueryPlan(
+                steps=steps,
+                intent_type=intent.intent_type,
+                estimated_time_ms=0,
+                estimated_cost=0.0
+            )
+        
+        # Step 1: Search for disease
+        search_step = PlanStep(
+            step_id=self._next_step_id(),
+            tool_name="opentargets_search",
+            args={"query": disease, "entity_types": ["disease"]},
+            depends_on=[],
+            output_name="disease_search",
+            estimated_time_ms=300
+        )
+        steps.append(search_step)
+        
+        # Step 2: Get disease targets
+        targets_step = PlanStep(
+            step_id=self._next_step_id(),
+            tool_name="opentargets_disease_targets",
+            args={"efo_id": "$disease_search.results[0].id", "limit": 25},
+            depends_on=[search_step.step_id],
+            output_name="disease_targets",
+            estimated_time_ms=500
+        )
+        steps.append(targets_step)
+        
+        return QueryPlan(
+            steps=steps,
+            intent_type=intent.intent_type,
+            estimated_time_ms=sum(s.estimated_time_ms for s in steps),
+            estimated_cost=0.0
+        )
+    
+    def _plan_target_disease_lookup(self, intent: ParsedIntent) -> QueryPlan:
+        """
+        Plan target-disease association lookup using Open Targets.
+        
+        Steps:
+        1. Search for target in Open Targets
+        2. Get diseases associated with the target
+        """
+        steps = []
+        entities = intent.entities
+        
+        target = entities.get("target", "")
+        
+        if not target:
+            return QueryPlan(
+                steps=steps,
+                intent_type=intent.intent_type,
+                estimated_time_ms=0,
+                estimated_cost=0.0
+            )
+        
+        # Step 1: Search for target
+        search_step = PlanStep(
+            step_id=self._next_step_id(),
+            tool_name="opentargets_search",
+            args={"query": target, "entity_types": ["target"]},
+            depends_on=[],
+            output_name="target_search",
+            estimated_time_ms=300
+        )
+        steps.append(search_step)
+        
+        # Step 2: Get target diseases
+        diseases_step = PlanStep(
+            step_id=self._next_step_id(),
+            tool_name="opentargets_target_diseases",
+            args={"ensembl_id": "$target_search.results[0].id", "limit": 25},
+            depends_on=[search_step.step_id],
+            output_name="target_diseases",
+            estimated_time_ms=500
+        )
+        steps.append(diseases_step)
+        
+        return QueryPlan(
+            steps=steps,
+            intent_type=intent.intent_type,
+            estimated_time_ms=sum(s.estimated_time_ms for s in steps),
+            estimated_cost=0.0
+        )
+    
+    def _plan_target_drug_lookup(self, intent: ParsedIntent) -> QueryPlan:
+        """
+        Plan target-drug lookup using Open Targets.
+        
+        Steps:
+        1. Search for target in Open Targets
+        2. Get drugs targeting this gene
+        """
+        steps = []
+        entities = intent.entities
+        
+        target = entities.get("target", "")
+        
+        if not target:
+            return QueryPlan(
+                steps=steps,
+                intent_type=intent.intent_type,
+                estimated_time_ms=0,
+                estimated_cost=0.0
+            )
+        
+        # Step 1: Search for target
+        search_step = PlanStep(
+            step_id=self._next_step_id(),
+            tool_name="opentargets_search",
+            args={"query": target, "entity_types": ["target"]},
+            depends_on=[],
+            output_name="target_search",
+            estimated_time_ms=300
+        )
+        steps.append(search_step)
+        
+        # Step 2: Get target drugs
+        drugs_step = PlanStep(
+            step_id=self._next_step_id(),
+            tool_name="opentargets_target_drugs",
+            args={"ensembl_id": "$target_search.results[0].id", "limit": 25},
+            depends_on=[search_step.step_id],
+            output_name="target_drugs",
+            estimated_time_ms=500
+        )
+        steps.append(drugs_step)
+        
+        return QueryPlan(
+            steps=steps,
+            intent_type=intent.intent_type,
+            estimated_time_ms=sum(s.estimated_time_ms for s in steps),
+            estimated_cost=0.0
+        )
+    
+    # =========================================================================
+    # Structure Planning Methods (PDB/AlphaFold)
+    # =========================================================================
+    
+    def _plan_structure_lookup(self, intent: ParsedIntent) -> QueryPlan:
+        """
+        Plan protein structure lookup from PDB.
+        
+        Steps:
+        1. If PDB ID provided, get structure directly
+        2. If target/UniProt ID provided, search PDB
+        """
+        steps = []
+        entities = intent.entities
+        
+        pdb_id = entities.get("pdb_id")
+        uniprot_id = entities.get("uniprot_id")
+        target = entities.get("target")
+        
+        if pdb_id:
+            # Direct PDB lookup
+            steps.append(PlanStep(
+                step_id=self._next_step_id(),
+                tool_name="structure_pdb_detail",
+                args={"pdb_id": pdb_id},
+                depends_on=[],
+                output_name="pdb_structure",
+                estimated_time_ms=300
+            ))
+        elif uniprot_id:
+            # Search by UniProt ID
+            steps.append(PlanStep(
+                step_id=self._next_step_id(),
+                tool_name="structure_pdb_by_uniprot",
+                args={"uniprot_id": uniprot_id, "limit": 10},
+                depends_on=[],
+                output_name="pdb_structures",
+                estimated_time_ms=500
+            ))
+        elif target:
+            # Search UniProt first, then PDB
+            uniprot_step = PlanStep(
+                step_id=self._next_step_id(),
+                tool_name="uniprot_search",
+                args={"query": target, "limit": 1},
+                depends_on=[],
+                output_name="uniprot_result",
+                estimated_time_ms=300
+            )
+            steps.append(uniprot_step)
+            
+            pdb_step = PlanStep(
+                step_id=self._next_step_id(),
+                tool_name="structure_pdb_by_uniprot",
+                args={"uniprot_id": "$uniprot_result.results[0].accession", "limit": 10},
+                depends_on=[uniprot_step.step_id],
+                output_name="pdb_structures",
+                estimated_time_ms=500
+            )
+            steps.append(pdb_step)
+        
+        return QueryPlan(
+            steps=steps,
+            intent_type=intent.intent_type,
+            estimated_time_ms=sum(s.estimated_time_ms for s in steps),
+            estimated_cost=0.0
+        )
+    
+    def _plan_alphafold_lookup(self, intent: ParsedIntent) -> QueryPlan:
+        """
+        Plan AlphaFold structure prediction lookup.
+        
+        Steps:
+        1. If UniProt ID provided, get AlphaFold structure directly
+        2. If target name provided, search UniProt first
+        """
+        steps = []
+        entities = intent.entities
+        
+        uniprot_id = entities.get("uniprot_id")
+        target = entities.get("target")
+        
+        if uniprot_id:
+            # Direct AlphaFold lookup
+            steps.append(PlanStep(
+                step_id=self._next_step_id(),
+                tool_name="structure_alphafold",
+                args={"uniprot_id": uniprot_id},
+                depends_on=[],
+                output_name="alphafold_structure",
+                estimated_time_ms=300
+            ))
+        elif target:
+            # Search UniProt first, then AlphaFold
+            uniprot_step = PlanStep(
+                step_id=self._next_step_id(),
+                tool_name="uniprot_search",
+                args={"query": target, "limit": 1},
+                depends_on=[],
+                output_name="uniprot_result",
+                estimated_time_ms=300
+            )
+            steps.append(uniprot_step)
+            
+            alphafold_step = PlanStep(
+                step_id=self._next_step_id(),
+                tool_name="structure_alphafold",
+                args={"uniprot_id": "$uniprot_result.results[0].accession"},
+                depends_on=[uniprot_step.step_id],
+                output_name="alphafold_structure",
+                estimated_time_ms=300
+            )
+            steps.append(alphafold_step)
+        
+        return QueryPlan(
+            steps=steps,
+            intent_type=intent.intent_type,
+            estimated_time_ms=sum(s.estimated_time_ms for s in steps),
+            estimated_cost=0.0
         )

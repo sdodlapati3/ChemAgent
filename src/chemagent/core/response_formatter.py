@@ -2,13 +2,26 @@
 Response formatting for ChemAgent query results.
 
 Converts raw execution results into human-readable answers
-tailored to different intent types.
+tailored to different intent types. Now includes evidence
+provenance tracking for verifiable responses.
 """
 
 from typing import Any, Dict, List, Optional
+from dataclasses import dataclass, field
+from datetime import datetime
 
 from chemagent.core.executor import ExecutionResult, ExecutionStatus
 from chemagent.core.intent_parser import IntentType, ParsedIntent
+
+
+@dataclass
+class ProvenanceRecord:
+    """Record of data provenance for evidence tracking."""
+    source: str                    # Database name (ChEMBL, PubChem, etc.)
+    source_id: Optional[str] = None  # ID in source database
+    source_url: Optional[str] = None  # URL to source record
+    retrieved_at: str = field(default_factory=lambda: datetime.now().isoformat())
+    confidence: float = 1.0        # Confidence in the data (0-1)
 
 
 class ResponseFormatter:
@@ -16,7 +29,18 @@ class ResponseFormatter:
     Formats execution results into human-readable answers.
     
     Provides intent-specific formatting for different types of chemistry queries.
+    Now includes provenance tracking for evidence-grounded responses.
     """
+    
+    def __init__(self, include_provenance: bool = True):
+        """
+        Initialize formatter.
+        
+        Args:
+            include_provenance: Whether to include data provenance in responses
+        """
+        self.include_provenance = include_provenance
+        self._provenance_records: List[ProvenanceRecord] = []
     
     def _safe_float(self, value: Any, default: str = "N/A", decimals: int = 2) -> str:
         """Safely convert value to formatted float string."""
@@ -28,17 +52,75 @@ class ResponseFormatter:
         except (ValueError, TypeError):
             return str(value) if value is not None else default
     
-    def format(self, intent: ParsedIntent, result: ExecutionResult) -> str:
+    def _extract_provenance(self, data: Dict[str, Any], source: str) -> ProvenanceRecord:
+        """Extract provenance information from tool output."""
+        source_id = data.get("chembl_id") or data.get("cid") or data.get("pdb_id") or data.get("ensembl_id")
+        source_url = None
+        
+        # Build source URL based on database
+        if source == "chembl" and data.get("chembl_id"):
+            source_url = f"https://www.ebi.ac.uk/chembl/compound_report_card/{data['chembl_id']}"
+        elif source == "pubchem" and data.get("cid"):
+            source_url = f"https://pubchem.ncbi.nlm.nih.gov/compound/{data['cid']}"
+        elif source == "pdb" and data.get("pdb_id"):
+            source_url = f"https://www.rcsb.org/structure/{data['pdb_id']}"
+        elif source == "alphafold" and data.get("uniprot_id"):
+            source_url = f"https://alphafold.ebi.ac.uk/entry/{data['uniprot_id']}"
+        elif source == "opentargets" and data.get("ensembl_id"):
+            source_url = f"https://platform.opentargets.org/target/{data['ensembl_id']}"
+        elif source == "uniprot" and data.get("accession"):
+            source_url = f"https://www.uniprot.org/uniprotkb/{data['accession']}"
+        
+        return ProvenanceRecord(
+            source=source,
+            source_id=str(source_id) if source_id else None,
+            source_url=source_url,
+            confidence=data.get("confidence", 1.0)
+        )
+    
+    def _format_provenance_section(self, records: List[ProvenanceRecord]) -> str:
+        """Format provenance records into a readable section."""
+        if not records:
+            return ""
+        
+        section = "\n---\n\n### 📚 Data Sources\n\n"
+        
+        for record in records:
+            source_name = record.source.upper()
+            if record.source_url:
+                section += f"- **{source_name}**"
+                if record.source_id:
+                    section += f": [{record.source_id}]({record.source_url})"
+                else:
+                    section += f": [View]({record.source_url})"
+            else:
+                section += f"- **{source_name}**"
+                if record.source_id:
+                    section += f": {record.source_id}"
+            section += "\n"
+        
+        section += f"\n_Retrieved: {datetime.now().strftime('%Y-%m-%d %H:%M UTC')}_\n"
+        return section
+    
+    def format(
+        self,
+        intent: ParsedIntent,
+        result: ExecutionResult,
+        include_provenance: Optional[bool] = None
+    ) -> str:
         """
         Generate human-readable answer from execution result.
         
         Args:
             intent: Parsed intent from query
             result: Execution result
+            include_provenance: Override default provenance inclusion
             
         Returns:
-            Formatted answer string
+            Formatted answer string with optional provenance
         """
+        self._provenance_records = []  # Reset for new query
+        
         if result.status != ExecutionStatus.COMPLETED:
             return self._format_error(result)
         
@@ -62,7 +144,14 @@ class ResponseFormatter:
         }
         
         formatter = formatters.get(intent.intent_type, self._format_generic)
-        return formatter(output)
+        response = formatter(output)
+        
+        # Add provenance if enabled
+        should_include = include_provenance if include_provenance is not None else self.include_provenance
+        if should_include and self._provenance_records:
+            response += self._format_provenance_section(self._provenance_records)
+        
+        return response
     
     def _format_error(self, result: ExecutionResult) -> str:
         """Format error message."""
@@ -100,6 +189,12 @@ class ResponseFormatter:
         
         if data.get("status") != "success":
             return f"❌ Compound not found: {data.get('error', 'Unknown error')}"
+        
+        # Track provenance
+        if data.get("chembl_id"):
+            self._provenance_records.append(self._extract_provenance(data, "chembl"))
+        elif data.get("cid"):
+            self._provenance_records.append(self._extract_provenance(data, "pubchem"))
         
         name = data.get("name", "Unknown compound")
         chembl_id = data.get("chembl_id", "N/A")

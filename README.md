@@ -39,10 +39,13 @@ print(result.answer)
 ## ✨ Features
 
 - 🗣️ **Natural Language Interface** - Ask questions in plain English
-- 🔬 **Real API Integration** - ChEMBL, RDKit, UniProt, BindingDB
+- 🔬 **Real API Integration** - ChEMBL, RDKit, UniProt, BindingDB, Open Targets, PubChem, PDB/AlphaFold
 - ⚡ **Parallel Execution** - 2-5x speedup on multi-step queries
 - 💾 **Smart Caching** - 18x speedup on repeated queries
 - 📊 **96.2% Success Rate** - Validated on 478 diverse queries
+- 🤖 **LLM Integration** - Hybrid router with Groq/Gemini fallback
+- 🧬 **Disease-Target Associations** - Open Targets integration
+- 🔬 **Protein Structures** - PDB and AlphaFold support
 - 🌐 **REST API** - FastAPI server with 14 endpoints
 - 🖥️ **Web UI** - Gradio interface for interactive exploration
 - 📈 **Production Ready** - Docker, monitoring, comprehensive tests
@@ -84,8 +87,22 @@ print(result.answer)
 | **Structure Conversion** | "Convert CHEMBL25 to SMILES" | 100% |
 | **Comparison** | "Compare aspirin and ibuprofen" | 77% |
 | **Substructure Search** | "Find compounds containing benzene" | 100% |
+| **Disease-Target Lookup** | "What targets are associated with breast cancer?" | NEW |
+| **Target-Drug Lookup** | "What drugs target EGFR?" | NEW |
+| **Protein Structure** | "Get AlphaFold prediction for P53" | NEW |
 
 **Overall Success**: 96.2% (460/478 queries tested)
+
+### Database Coverage
+
+| Database | Tools | Data Coverage |
+|----------|-------|---------------|
+| **ChEMBL** | 5 tools | 2.4M+ compounds, 14K targets |
+| **PubChem** | 4 tools | 115M+ compounds |
+| **UniProt** | 2 tools | 500K+ proteins |
+| **Open Targets** | 5 tools | Disease-target associations |
+| **PDB/AlphaFold** | 4 tools | Protein structures |
+| **RDKit** | 5 tools | Property calculations |
 
 ---
 
@@ -93,10 +110,12 @@ print(result.answer)
 
 ```
 User Query → Intent Parser → Query Planner → Executor → Response Formatter
-                                    ↓
-                            Tool Registry
-                          ↙      ↓      ↘
-                    ChEMBL   RDKit   UniProt
+                  ↓                               ↓
+          LLM Router (Groq)              Tool Registry (26 tools)
+              ↓                          ↙      ↓      ↘      ↘
+         Pattern Matching         ChEMBL   PubChem   UniProt   Open Targets
+                                          ↙    ↘
+                                       RDKit  PDB/AlphaFold
 ```
 
 **Key Components**:

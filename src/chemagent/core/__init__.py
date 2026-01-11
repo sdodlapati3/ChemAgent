@@ -17,6 +17,10 @@ from chemagent.core.query_planner import (
     QueryPlan,
     QueryPlanner,
 )
+from chemagent.core.response_formatter import (
+    ResponseFormatter,
+    format_response,
+)
 
 __all__ = [
     "ExecutionResult",
@@ -28,6 +32,8 @@ __all__ = [
     "QueryExecutor",
     "QueryPlan",
     "QueryPlanner",
+    "ResponseFormatter",
     "StepResult",
     "ToolRegistry",
+    "format_response",
 ]

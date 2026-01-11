@@ -8,6 +8,7 @@ Supports both serial and parallel execution modes for improved performance.
 """
 
 import re
+import logging
 from dataclasses import dataclass, field
 from datetime import datetime
 from enum import Enum
@@ -15,6 +16,8 @@ from typing import Any, Callable, Dict, List, Optional
 
 from chemagent.core.query_planner import PlanStep, QueryPlan
 from chemagent.core.parallel import ParallelExecutor, ExecutionMetrics
+
+logger = logging.getLogger(__name__)
 
 
 class ExecutionStatus(Enum):
@@ -102,19 +105,29 @@ class ToolRegistry:
     Registry of available tools that can be executed.
     
     Maps tool names to callable functions.
+    Supports dependency injection for better testability.
     """
     
-    def __init__(self, use_real_tools: bool = False):
+    def __init__(self, use_real_tools: bool = False, tool_loader: Optional[Callable] = None):
         """
         Initialize registry.
         
         Args:
             use_real_tools: If True, register real tool implementations.
                           If False, use placeholder tools for testing.
+            tool_loader: Optional callable that registers tools (for dependency injection).
+                        Function signature: tool_loader(registry: ToolRegistry) -> None
         """
         self._tools: Dict[str, Callable] = {}
         self._use_real_tools = use_real_tools
-        self._register_default_tools()
+        
+        # Use dependency injection if provided
+        if tool_loader:
+            tool_loader(self)
+        elif use_real_tools:
+            self._load_real_tools()
+        else:
+            self._register_placeholder_tools()
     
     def register(self, name: str, func: Callable) -> None:
         """
@@ -169,19 +182,23 @@ class ToolRegistry:
         """
         return list(self._tools.keys())
     
-    def _register_default_tools(self) -> None:
-        """Register default tools."""
-        if self._use_real_tools:
-            # Register real tool implementations
-            try:
-                from chemagent.tools.tool_implementations import register_real_tools
-                register_real_tools(self)
-            except ImportError as e:
-                # Fall back to placeholder tools if imports fail
-                print(f"Warning: Could not load real tools ({e}), using placeholders")
-                self._register_placeholder_tools()
-        else:
-            # Use placeholder tools for testing
+    def _load_real_tools(self) -> None:
+        """
+        Load real tool implementations with proper error handling.
+        
+        Falls back to placeholder tools if real tools cannot be loaded.
+        """
+        try:
+            from chemagent.tools.tool_implementations import register_real_tools
+            register_real_tools(self)
+            logger.info("Loaded real tool implementations")
+        except ImportError as e:
+            logger.warning("Could not load real tools: %s", str(e))
+            logger.info("Falling back to placeholder tools")
+            self._register_placeholder_tools()
+        except Exception as e:
+            logger.error("Error loading real tools: %s", str(e), exc_info=True)
+            logger.info("Falling back to placeholder tools")
             self._register_placeholder_tools()
     
     def _register_placeholder_tools(self) -> None:
@@ -290,7 +307,7 @@ class QueryExecutor:
             for group in groups:
                 group_start = datetime.now()
                 
-                if self.enable_parallel and len(group) > 1:
+                if self.enable_parallel and len(group) > 1 and self.parallel_executor is not None:
                     # Execute group in parallel
                     self.metrics.steps_parallelized += len(group)
                     group_results = self.parallel_executor.execute_group_parallel(

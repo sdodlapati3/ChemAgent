@@ -16,6 +16,9 @@ chembl-webresource-client>=0.10.8
 # Caching
 diskcache>=5.6.3
 
+# LLM integration (Phase 5) - unified API for Groq, Gemini, OpenAI, etc.
+litellm>=1.50.0
+
 # Development dependencies (install with: pip install -e ".[dev]")
 # pytest>=7.4.0
 # pytest-cov>=4.1.0

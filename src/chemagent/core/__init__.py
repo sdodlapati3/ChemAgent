@@ -22,11 +22,31 @@ from chemagent.core.response_formatter import (
     format_response,
 )
 
+# LLM router (optional - requires litellm)
+try:
+    from chemagent.core.llm_router import (
+        HybridIntentParser,
+        LLMRouter,
+        LLMStats,
+        quick_parse,
+    )
+    LLM_AVAILABLE = True
+except ImportError:
+    LLM_AVAILABLE = False
+    HybridIntentParser = None
+    LLMRouter = None
+    LLMStats = None
+    quick_parse = None
+
 __all__ = [
     "ExecutionResult",
     "ExecutionStatus",
+    "HybridIntentParser",
     "IntentParser",
     "IntentType",
+    "LLMRouter",
+    "LLMStats",
+    "LLM_AVAILABLE",
     "ParsedIntent",
     "PlanStep",
     "QueryExecutor",
@@ -36,4 +56,5 @@ __all__ = [
     "StepResult",
     "ToolRegistry",
     "format_response",
+    "quick_parse",
 ]

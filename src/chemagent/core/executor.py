@@ -221,6 +221,25 @@ class ToolRegistry:
         self.register("uniprot_get_protein", self._placeholder_tool)
         self.register("uniprot_search", self._placeholder_tool)
         
+        # Open Targets tools
+        self.register("opentargets_search", self._placeholder_tool)
+        self.register("opentargets_get_target", self._placeholder_tool)
+        self.register("opentargets_disease_targets", self._placeholder_tool)
+        self.register("opentargets_target_diseases", self._placeholder_tool)
+        self.register("opentargets_target_drugs", self._placeholder_tool)
+        
+        # PubChem tools
+        self.register("pubchem_get_by_name", self._placeholder_tool)
+        self.register("pubchem_get_by_cid", self._placeholder_tool)
+        self.register("pubchem_similarity_search", self._placeholder_tool)
+        self.register("pubchem_get_bioassays", self._placeholder_tool)
+        
+        # Structure tools (PDB + AlphaFold)
+        self.register("structure_alphafold", self._placeholder_tool)
+        self.register("structure_pdb_by_uniprot", self._placeholder_tool)
+        self.register("structure_pdb_detail", self._placeholder_tool)
+        self.register("structure_pdb_by_ligand", self._placeholder_tool)
+        
         # Utility tools
         self.register("filter_by_properties", self._placeholder_tool)
     

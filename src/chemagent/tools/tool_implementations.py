@@ -1,8 +1,9 @@
 """
 Real tool implementations for ChemAgent.
 
-Integrates actual ChEMBL, RDKit, BindingDB, and UniProt clients
-with the query executor's tool registry.
+Integrates actual ChEMBL, RDKit, BindingDB, UniProt, Open Targets,
+PubChem, and Structure (PDB/AlphaFold) clients with the query
+executor's tool registry.
 """
 
 from typing import Any, Dict, List, Optional
@@ -13,6 +14,9 @@ from chemagent.tools.bindingdb_client import BindingDBClient
 from chemagent.tools.chembl_client import ChEMBLClient
 from chemagent.tools.rdkit_tools import RDKitTools
 from chemagent.tools.uniprot_client import UniProtClient
+from chemagent.tools.opentargets_client import OpenTargetsClient
+from chemagent.tools.pubchem_client import PubChemClient
+from chemagent.tools.structure_client import StructureClient
 
 
 class ChEMBLTools:
@@ -555,6 +559,477 @@ class UtilityTools:
         }
 
 
+class OpenTargetsTools:
+    """Open Targets tool implementations for disease-target associations."""
+    
+    def __init__(self):
+        """Initialize Open Targets client."""
+        self.client = OpenTargetsClient()
+    
+    def search(
+        self,
+        query: str,
+        entity_types: Optional[List[str]] = None
+    ) -> Dict[str, Any]:
+        """
+        Search across targets, diseases, and drugs.
+        
+        Args:
+            query: Search query string
+            entity_types: Filter by entity types ["target", "disease", "drug"]
+            
+        Returns:
+            Search results with entities
+        """
+        try:
+            results = self.client.search(query, entity_types)
+            return {
+                "status": "success",
+                "results": results,
+                "count": len(results)
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "error": str(e)
+            }
+    
+    def get_target_info(self, ensembl_id: str) -> Dict[str, Any]:
+        """
+        Get target/gene information.
+        
+        Args:
+            ensembl_id: Ensembl gene ID (e.g., ENSG00000146648 for EGFR)
+            
+        Returns:
+            Target information including gene symbol, name, UniProt ID
+        """
+        try:
+            target = self.client.get_target_info(ensembl_id)
+            if not target:
+                return {
+                    "status": "not_found",
+                    "ensembl_id": ensembl_id
+                }
+            return {
+                "status": "success",
+                "ensembl_id": target.ensembl_id,
+                "gene_symbol": target.gene_symbol,
+                "gene_name": target.gene_name,
+                "uniprot_id": target.uniprot_id,
+                "biotype": target.biotype
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "error": str(e)
+            }
+    
+    def get_disease_targets(
+        self,
+        efo_id: str,
+        limit: int = 25
+    ) -> Dict[str, Any]:
+        """
+        Get targets associated with a disease.
+        
+        Args:
+            efo_id: EFO disease ID
+            limit: Maximum number of results
+            
+        Returns:
+            Target associations with scores
+        """
+        try:
+            targets = self.client.get_disease_targets(efo_id, limit)
+            return {
+                "status": "success",
+                "disease_id": efo_id,
+                "targets": targets,
+                "count": len(targets)
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "error": str(e)
+            }
+    
+    def get_target_diseases(
+        self,
+        ensembl_id: str,
+        limit: int = 25
+    ) -> Dict[str, Any]:
+        """
+        Get diseases associated with a target.
+        
+        Args:
+            ensembl_id: Ensembl gene ID
+            limit: Maximum number of results
+            
+        Returns:
+            Disease associations with scores
+        """
+        try:
+            diseases = self.client.get_target_diseases(ensembl_id, limit)
+            return {
+                "status": "success",
+                "target_id": ensembl_id,
+                "diseases": [
+                    {
+                        "efo_id": d.efo_id,
+                        "name": d.name,
+                        "score": d.score,
+                        "therapeutic_areas": d.therapeutic_areas
+                    }
+                    for d in diseases
+                ],
+                "count": len(diseases)
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "error": str(e)
+            }
+    
+    def get_target_drugs(
+        self,
+        ensembl_id: str,
+        limit: int = 25
+    ) -> Dict[str, Any]:
+        """
+        Get drugs targeting a specific gene.
+        
+        Args:
+            ensembl_id: Ensembl gene ID
+            limit: Maximum number of results
+            
+        Returns:
+            Drug associations with mechanism of action
+        """
+        try:
+            drugs = self.client.get_target_drugs(ensembl_id, limit)
+            return {
+                "status": "success",
+                "target_id": ensembl_id,
+                "drugs": [
+                    {
+                        "drug_id": d.drug_id,
+                        "drug_name": d.drug_name,
+                        "drug_type": d.drug_type,
+                        "mechanism": d.mechanism_of_action,
+                        "action_type": d.action_type,
+                        "phase": d.phase
+                    }
+                    for d in drugs
+                ],
+                "count": len(drugs)
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "error": str(e)
+            }
+
+
+class PubChemTools:
+    """PubChem tool implementations for compound data."""
+    
+    def __init__(self):
+        """Initialize PubChem client."""
+        self.client = PubChemClient()
+    
+    def get_compound_by_name(self, name: str) -> Dict[str, Any]:
+        """
+        Get compound by name.
+        
+        Args:
+            name: Compound name
+            
+        Returns:
+            Compound data including CID, SMILES, properties
+        """
+        try:
+            compound = self.client.get_compound_by_name(name)
+            if not compound:
+                return {
+                    "status": "not_found",
+                    "name": name
+                }
+            return {
+                "status": "success",
+                "cid": compound.cid,
+                "name": compound.iupac_name,
+                "smiles": compound.canonical_smiles,
+                "molecular_weight": compound.molecular_weight,
+                "molecular_formula": compound.molecular_formula,
+                "xlogp": compound.xlogp,
+                "hbd_count": compound.hbd_count,
+                "hba_count": compound.hba_count,
+                "rotatable_bonds": compound.rotatable_bond_count,
+                "lipinski_violations": compound.lipinski_violations
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "error": str(e)
+            }
+    
+    def get_compound_by_cid(self, cid: int) -> Dict[str, Any]:
+        """
+        Get compound by PubChem CID.
+        
+        Args:
+            cid: PubChem compound ID
+            
+        Returns:
+            Compound data
+        """
+        try:
+            compound = self.client.get_compound(cid)
+            if not compound:
+                return {
+                    "status": "not_found",
+                    "cid": cid
+                }
+            return {
+                "status": "success",
+                "cid": compound.cid,
+                "name": compound.iupac_name,
+                "smiles": compound.canonical_smiles,
+                "molecular_weight": compound.molecular_weight,
+                "molecular_formula": compound.molecular_formula,
+                "xlogp": compound.xlogp,
+                "hbd_count": compound.hbd_count,
+                "hba_count": compound.hba_count,
+                "rotatable_bonds": compound.rotatable_bond_count,
+                "lipinski_violations": compound.lipinski_violations
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "error": str(e)
+            }
+    
+    def similarity_search(
+        self,
+        smiles: str,
+        threshold: float = 0.9,
+        limit: int = 10
+    ) -> Dict[str, Any]:
+        """
+        Find similar compounds in PubChem.
+        
+        Args:
+            smiles: Query SMILES
+            threshold: Similarity threshold (0-1)
+            limit: Maximum results
+            
+        Returns:
+            Similar compounds with properties
+        """
+        try:
+            results = self.client.similarity_search(smiles, threshold, limit)
+            return {
+                "status": "success",
+                "query_smiles": smiles,
+                "threshold": threshold,
+                "compounds": [
+                    {
+                        "cid": c.cid,
+                        "smiles": c.smiles,
+                        "similarity": c.similarity,
+                        "molecular_weight": c.molecular_weight
+                    }
+                    for c in results
+                ],
+                "count": len(results)
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "error": str(e)
+            }
+    
+    def get_bioassays(
+        self,
+        cid: int,
+        limit: int = 10
+    ) -> Dict[str, Any]:
+        """
+        Get bioassay data for a compound.
+        
+        Args:
+            cid: PubChem compound ID
+            limit: Maximum results
+            
+        Returns:
+            Bioassay results
+        """
+        try:
+            assays = self.client.get_bioassays(cid, limit)
+            return {
+                "status": "success",
+                "cid": cid,
+                "assays": assays,
+                "count": len(assays)
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "error": str(e)
+            }
+
+
+class StructureTools:
+    """Structure tool implementations for PDB and AlphaFold."""
+    
+    def __init__(self):
+        """Initialize structure client."""
+        self.client = StructureClient()
+    
+    def get_alphafold_structure(self, uniprot_id: str) -> Dict[str, Any]:
+        """
+        Get AlphaFold structure prediction.
+        
+        Args:
+            uniprot_id: UniProt accession ID
+            
+        Returns:
+            AlphaFold structure with confidence scores
+        """
+        try:
+            structure = self.client.get_alphafold_structure(uniprot_id)
+            if not structure:
+                return {
+                    "status": "not_found",
+                    "uniprot_id": uniprot_id
+                }
+            return {
+                "status": "success",
+                "uniprot_id": structure.uniprot_id,
+                "gene_name": structure.gene_name,
+                "organism": structure.organism,
+                "mean_plddt": structure.mean_plddt,
+                "confidence_category": structure.confidence_category,
+                "model_url": structure.model_url,
+                "pdb_url": structure.pdb_url
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "error": str(e)
+            }
+    
+    def search_pdb_by_uniprot(
+        self,
+        uniprot_id: str,
+        limit: int = 10
+    ) -> Dict[str, Any]:
+        """
+        Search PDB for structures by UniProt ID.
+        
+        Args:
+            uniprot_id: UniProt accession ID
+            limit: Maximum results
+            
+        Returns:
+            PDB structures with resolution and method
+        """
+        try:
+            structures = self.client.search_by_uniprot(uniprot_id, limit)
+            return {
+                "status": "success",
+                "uniprot_id": uniprot_id,
+                "structures": [
+                    {
+                        "pdb_id": s.pdb_id,
+                        "title": s.title,
+                        "resolution": s.resolution,
+                        "method": s.method,
+                        "release_date": s.release_date,
+                        "chain_ids": s.chain_ids
+                    }
+                    for s in structures
+                ],
+                "count": len(structures)
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "error": str(e)
+            }
+    
+    def get_pdb_structure(self, pdb_id: str) -> Dict[str, Any]:
+        """
+        Get PDB structure details.
+        
+        Args:
+            pdb_id: PDB ID (e.g., "1ABC")
+            
+        Returns:
+            Structure details
+        """
+        try:
+            structure = self.client.get_pdb_structure(pdb_id)
+            if not structure:
+                return {
+                    "status": "not_found",
+                    "pdb_id": pdb_id
+                }
+            return {
+                "status": "success",
+                "pdb_id": structure.pdb_id,
+                "title": structure.title,
+                "resolution": structure.resolution,
+                "method": structure.method,
+                "release_date": structure.release_date,
+                "organism": structure.organism,
+                "chain_ids": structure.chain_ids
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "error": str(e)
+            }
+    
+    def search_pdb_by_ligand(
+        self,
+        ligand_id: str,
+        limit: int = 10
+    ) -> Dict[str, Any]:
+        """
+        Search PDB for structures containing a ligand.
+        
+        Args:
+            ligand_id: Ligand ID (e.g., "ATP", "HEM")
+            limit: Maximum results
+            
+        Returns:
+            PDB structures containing the ligand
+        """
+        try:
+            structures = self.client.search_by_ligand(ligand_id, limit)
+            return {
+                "status": "success",
+                "ligand_id": ligand_id,
+                "structures": [
+                    {
+                        "pdb_id": s.pdb_id,
+                        "title": s.title,
+                        "resolution": s.resolution,
+                        "method": s.method
+                    }
+                    for s in structures
+                ],
+                "count": len(structures)
+            }
+        except Exception as e:
+            return {
+                "status": "error",
+                "error": str(e)
+            }
+
+
 def register_real_tools(registry) -> None:
     """
     Register real tool implementations.
@@ -567,6 +1042,9 @@ def register_real_tools(registry) -> None:
     rdkit = RDKitToolsWrapper()
     uniprot = UniProtTools()
     utility = UtilityTools()
+    opentargets = OpenTargetsTools()
+    pubchem = PubChemTools()
+    structure = StructureTools()
     
     # Register ChEMBL tools
     registry.register("chembl_search_by_name", chembl.search_by_name)
@@ -585,6 +1063,25 @@ def register_real_tools(registry) -> None:
     # Register UniProt tools
     registry.register("uniprot_get_protein", uniprot.get_protein)
     registry.register("uniprot_search", uniprot.search)
+    
+    # Register Open Targets tools (disease-target associations)
+    registry.register("opentargets_search", opentargets.search)
+    registry.register("opentargets_get_target", opentargets.get_target_info)
+    registry.register("opentargets_disease_targets", opentargets.get_disease_targets)
+    registry.register("opentargets_target_diseases", opentargets.get_target_diseases)
+    registry.register("opentargets_target_drugs", opentargets.get_target_drugs)
+    
+    # Register PubChem tools (115M+ compounds)
+    registry.register("pubchem_get_by_name", pubchem.get_compound_by_name)
+    registry.register("pubchem_get_by_cid", pubchem.get_compound_by_cid)
+    registry.register("pubchem_similarity_search", pubchem.similarity_search)
+    registry.register("pubchem_get_bioassays", pubchem.get_bioassays)
+    
+    # Register Structure tools (PDB + AlphaFold)
+    registry.register("structure_alphafold", structure.get_alphafold_structure)
+    registry.register("structure_pdb_by_uniprot", structure.search_pdb_by_uniprot)
+    registry.register("structure_pdb_detail", structure.get_pdb_structure)
+    registry.register("structure_pdb_by_ligand", structure.search_pdb_by_ligand)
     
     # Register utility tools
     registry.register("filter_by_properties", utility.filter_by_properties)

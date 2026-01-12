@@ -44,6 +44,22 @@ try:
 except ImportError:
     LLM_AVAILABLE = False
 
+# LLM Router for intelligent intent parsing with fallback
+try:
+    from chemagent.core.llm_router import (
+        LLMRouter,
+        HybridIntentParser,
+        LLMStats,
+        quick_parse,
+        LITELLM_AVAILABLE as LLM_ROUTER_AVAILABLE,
+    )
+except ImportError:
+    LLM_ROUTER_AVAILABLE = False
+    LLMRouter = None
+    HybridIntentParser = None
+    LLMStats = None
+    quick_parse = None
+
 # OptimalAgent (hybrid tiered architecture - requires litellm for LLM features)
 try:
     from chemagent.core.optimal_agent import (
@@ -122,6 +138,40 @@ except ImportError:
     ModelConfig = None
     create_multi_agent_system = None
 
+# Query Plan Persistence
+try:
+    from chemagent.core.persistence import (
+        QueryPlanStore,
+        SavedPlan,
+        get_plan_store,
+    )
+    PERSISTENCE_AVAILABLE = True
+except ImportError:
+    PERSISTENCE_AVAILABLE = False
+    QueryPlanStore = None
+    SavedPlan = None
+    get_plan_store = None
+
+# Export functionality for reference managers
+try:
+    from chemagent.core.export import (
+        ResultExporter,
+        ExportMetadata,
+        export_bibtex,
+        export_ris,
+        export_json,
+        export_markdown,
+    )
+    EXPORT_AVAILABLE = True
+except ImportError:
+    EXPORT_AVAILABLE = False
+    ResultExporter = None
+    ExportMetadata = None
+    export_bibtex = None
+    export_ris = None
+    export_json = None
+    export_markdown = None
+
 __all__ = [
     # Core components
     "ExecutionResult",
@@ -142,6 +192,12 @@ __all__ = [
     "get_tool_description",
     # LLM availability
     "LLM_AVAILABLE",
+    # LLM Router
+    "LLMRouter",
+    "HybridIntentParser",
+    "LLMStats",
+    "LLM_ROUTER_AVAILABLE",
+    "quick_parse",
     # OptimalAgent (hybrid tiered architecture)
     "OptimalAgent",
     "AgentResponse",
@@ -175,4 +231,17 @@ __all__ = [
     "ModelConfig",
     "MULTI_AGENT_AVAILABLE",
     "create_multi_agent_system",
+    # Query Plan Persistence
+    "QueryPlanStore",
+    "SavedPlan",
+    "get_plan_store",
+    "PERSISTENCE_AVAILABLE",
+    # Export functionality
+    "ResultExporter",
+    "ExportMetadata",
+    "export_bibtex",
+    "export_ris",
+    "export_json",
+    "export_markdown",
+    "EXPORT_AVAILABLE",
 ]

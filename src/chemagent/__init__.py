@@ -88,7 +88,6 @@ class QueryResult:
     intent_type: Optional[str] = None
     error: Optional[str] = None
     raw_output: Any = None
-    cached: bool = False
     query: str = ""  # Original query text
     cached: bool = False
     

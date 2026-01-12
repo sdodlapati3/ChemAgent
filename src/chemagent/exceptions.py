@@ -4,7 +4,7 @@ Custom exception hierarchy for ChemAgent.
 Provides specific error types with helpful suggestions for common failures.
 """
 
-from typing import Optional
+from typing import Any, Optional
 
 
 class ChemAgentError(Exception):
@@ -371,7 +371,7 @@ class CacheError(ChemAgentError):
 class ValidationError(ChemAgentError):
     """Input validation failed."""
     
-    def __init__(self, field: str, value: any, reason: str):
+    def __init__(self, field: str, value: Any, reason: str):
         """
         Initialize with field, value, and reason.
         

@@ -335,7 +335,7 @@ class ChemAgentState:
             registry = ToolRegistry(use_real_tools=use_real_tools)
             
             if enable_cache:
-                cache_dir = os.getenv("CHEMAGENT_CACHE_DIR", ".cache/chemagent")
+                cache_dir = Path(os.getenv("CHEMAGENT_CACHE_DIR", ".cache/chemagent"))
                 cache_ttl = int(os.getenv("CHEMAGENT_CACHE_TTL", "3600"))
                 self.cache = ResultCache(cache_dir=cache_dir, ttl=cache_ttl)
                 add_caching_to_registry(registry, self.cache)
@@ -541,7 +541,7 @@ async def process_query(request: QueryRequest):
         
         # Use OptimalAgent if available (hybrid architecture)
         if state.agent_mode and state.agent:
-            response = state.agent.process(request.query, session_id=request.session_id)
+            response = state.agent.process(request.query, session_id=request.session_id or "default")
             
             return QueryResponse(
                 status="success" if response.success else "error",
@@ -656,7 +656,7 @@ async def process_multi_agent_query(request: MultiAgentQueryRequest):
         
         # Use OptimalAgent if available
         if state.agent_mode and state.agent:
-            response = state.agent.process(request.query, session_id=request.session_id)
+            response = state.agent.process(request.query, session_id=request.session_id or "default")
             return MultiAgentQueryResponse(
                 success=response.success,
                 query=request.query,
@@ -681,7 +681,7 @@ async def process_multi_agent_query(request: MultiAgentQueryRequest):
         logger.info(f"Multi-Agent Query: {request.query}")
         
         # Process with coordinator
-        result = state.coordinator.process(request.query, session_id=request.session_id)
+        result = state.coordinator.process(request.query, session_id=request.session_id or "default")
         
         execution_time = (time.time() - start_time) * 1000
         
@@ -946,7 +946,7 @@ async def query_stream(request: QueryRequest):
                     })
                     
                     # Process with OptimalAgent (include session_id for conversation memory)
-                    response = state.agent.process(request.query, session_id=request.session_id)
+                    response = state.agent.process(request.query, session_id=request.session_id or "default")
                     
                     if response.tools_used:
                         progress_queue.put({

@@ -348,12 +348,12 @@ class RDKitTools:
         """
         # Calculate fraction of sp3 carbons (with fallback for older RDKit versions)
         try:
-            fraction_csp3 = Descriptors.FractionCsp3(mol)
+            fraction_csp3 = Descriptors.FractionCSP3(mol)
         except AttributeError:
             # Fallback: manually calculate fraction of sp3 carbons
             try:
                 from rdkit.Chem import Lipinski
-                fraction_csp3 = Lipinski.FractionCsp3(mol)
+                fraction_csp3 = Lipinski.FractionCSP3(mol)
             except (ImportError, AttributeError):
                 # Last resort: calculate manually
                 num_sp3 = sum(1 for atom in mol.GetAtoms() 

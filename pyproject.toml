@@ -55,18 +55,22 @@ web = [
     "gradio>=4.0.0",
     "plotly>=5.17.0",
 ]
+mcp = [
+    "mcp>=1.0.0",
+]
 all = [
-    "chemagent[dev,llm,web]",
+    "chemagent[dev,llm,web,mcp]",
 ]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/ChemAgent"
+Homepage = "https://github.com/sdodlapati3/ChemAgent"
 Documentation = "https://chemagent.readthedocs.io"
-Repository = "https://github.com/yourusername/ChemAgent"
-Issues = "https://github.com/yourusername/ChemAgent/issues"
+Repository = "https://github.com/sdodlapati3/ChemAgent"
+Issues = "https://github.com/sdodlapati3/ChemAgent/issues"
 
 [project.scripts]
 chemagent = "chemagent.cli:main"
+chemagent-mcp = "chemagent.mcp.server:main"
 
 [tool.setuptools]
 packages = ["chemagent"]

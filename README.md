@@ -52,6 +52,7 @@ print(result.answer)
 - 💾 **Query Persistence** - Save and replay query plans (SQLite)
 - 📚 **Export to Reference Managers** - BibTeX, RIS, JSON, Markdown output
 - 🔒 **Verifier Gate** - Hallucination prevention with claim verification
+- 🔌 **MCP Server** - Claude Desktop and VS Code integration via Model Context Protocol
 
 ---
 

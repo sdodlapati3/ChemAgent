@@ -266,9 +266,9 @@ If you use ChemAgent in your research, please cite:
 ```bibtex
 @software{chemagent2026,
   title = {ChemAgent: AI-Powered Pharmaceutical Research Assistant},
-  author = {Your Name},
+  author = {Srinivas Dodlapati},
   year = {2026},
-  url = {https://github.com/yourusername/ChemAgent}
+  url = {https://github.com/sdodlapati3/ChemAgent}
 }
 ```
 

@@ -167,7 +167,8 @@ class ChEMBLTools:
     def get_activities(
         self,
         chembl_id: str,
-        target: Optional[str] = None
+        target: Optional[str] = None,
+        limit: int = 100
     ) -> Dict[str, Any]:
         """
         Get compound bioactivities.
@@ -175,12 +176,13 @@ class ChEMBLTools:
         Args:
             chembl_id: Compound ChEMBL ID
             target: Optional target filter
+            limit: Maximum number of results (default 100)
             
         Returns:
             Activity data
         """
         try:
-            activities = self.client.get_activities(chembl_id, target_type=target)
+            activities = self.client.get_activities(chembl_id, target_type=target, limit=limit)
             
             # Convert ActivityResult objects to dicts for JSON serialization
             activity_dicts = []
@@ -1070,6 +1072,18 @@ def register_real_tools(registry) -> None:
     registry.register("opentargets_disease_targets", opentargets.get_disease_targets)
     registry.register("opentargets_target_diseases", opentargets.get_target_diseases)
     registry.register("opentargets_target_drugs", opentargets.get_target_drugs)
+    
+    # Register NEW Open Targets tools with provenance tracking
+    from chemagent.tools.opentargets import (
+        search_target as ot_search_target,
+        search_disease as ot_search_disease,
+        get_target_disease_evidence as ot_get_evidence,
+        get_target_associations as ot_get_associations,
+    )
+    registry.register("opentargets_search_target", ot_search_target)
+    registry.register("opentargets_search_disease", ot_search_disease)
+    registry.register("opentargets_get_evidence", ot_get_evidence)
+    registry.register("opentargets_get_associations", ot_get_associations)
     
     # Register PubChem tools (115M+ compounds)
     registry.register("pubchem_get_by_name", pubchem.get_compound_by_name)

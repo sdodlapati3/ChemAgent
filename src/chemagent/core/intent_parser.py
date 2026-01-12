@@ -137,8 +137,69 @@ class IntentParser:
         """
         return [
             # ============================================================
+            # MULTI-STEP WORKFLOW PATTERNS (MUST BE FIRST!)
+            # These patterns match complex queries that could otherwise
+            # be captured by simpler patterns below
+            # ============================================================
+            (
+                # "properties and targets for CHEMBL25" - multi-step workflow
+                # MUST BE FIRST to avoid matching generic property/target patterns
+                r"(get\s+)?(properties?|props?)\s+and\s+targets?\s+(of|for)\s+(CHEMBL\d+)",
+                {"intent": IntentType.COMPARISON, "entity_extractors": ["chembl_id"]}
+            ),
+            (
+                # "targets and properties for CHEMBL25" - alternate order
+                r"(get\s+)?targets?\s+and\s+(properties?|props?)\s+(of|for)\s+(CHEMBL\d+)",
+                {"intent": IntentType.COMPARISON, "entity_extractors": ["chembl_id"]}
+            ),
+            
+            # ============================================================
+            # COMPOUND TARGET QUERIES (must be before TARGET_LOOKUP)
+            # Queries asking what targets a compound binds to
+            # ============================================================
+            (
+                # "What are the targets of aspirin" / "targets of CHEMBL25"
+                r"(what.*(are|is)?.*)?targets?\s+(of|for)\s+(CHEMBL\d+|aspirin|ibuprofen|metformin|caffeine|\w+)",
+                {"intent": IntentType.ACTIVITY_LOOKUP, "entity_extractors": ["compound", "chembl_id"]}
+            ),
+            (
+                # "Find targets for CHEMBL25"
+                r"(find|get|show|list)\s+targets?\s+(for|of)\s+(CHEMBL\d+|\w+)",
+                {"intent": IntentType.ACTIVITY_LOOKUP, "entity_extractors": ["compound", "chembl_id"]}
+            ),
+            (
+                # "What does aspirin/CHEMBL25 bind to"
+                r"what\s+(does|do)\s+(CHEMBL\d+|\w+)\s+(bind|target|inhibit)",
+                {"intent": IntentType.ACTIVITY_LOOKUP, "entity_extractors": ["compound", "chembl_id"]}
+            ),
+            (
+                # "protein targets for CHEMBL25"
+                r"(protein\s+)?targets?\s+(for|of)\s+(CHEMBL\d+|\w+)",
+                {"intent": IntentType.ACTIVITY_LOOKUP, "entity_extractors": ["compound", "chembl_id"]}
+            ),
+            
+            # ============================================================
+            # PROPERTY WITH CHEMBL ID (must be before generic property patterns)
+            # ============================================================
+            (
+                # "Get LogP for CHEMBL25" / "molecular weight of CHEMBL25"
+                r"(get|what.?s|what is|show|calculate)?\s*(logp|mw|molecular weight|properties?)\s+(of|for)\s+(CHEMBL\d+)",
+                {"intent": IntentType.COMPOUND_LOOKUP, "entity_extractors": ["chembl_id", "property_name"]}
+            ),
+            (
+                # "properties of CHEMBL25"
+                r"(properties?|props?)\s+(of|for)\s+(CHEMBL\d+)",
+                {"intent": IntentType.COMPOUND_LOOKUP, "entity_extractors": ["chembl_id"]}
+            ),
+            
+            # ============================================================
             # SIMILARITY SEARCH (10 patterns)
             # ============================================================
+            (
+                # Handle CHEMBL ID similarity - lookup first before similarity
+                r"(find|search)?\s*(compounds?)?\s*(similar|analogs?|like)\s+(to\s+)?(CHEMBL\d+)",
+                {"intent": IntentType.SIMILARITY_SEARCH, "entity_extractors": ["chembl_id", "threshold", "limit"]}
+            ),
             (
                 r"find.*(similar|analogs?|related).*(compounds?|molecules?|structures?).*(to|of|like)\s+(?P<compound>\w+)",
                 {"intent": IntentType.SIMILARITY_SEARCH, "entity_extractors": ["compound", "threshold", "limit"]}
@@ -163,6 +224,11 @@ class IntentParser:
             (
                 r"structural?.*(similar|analog)",
                 {"intent": IntentType.SIMILARITY_SEARCH, "entity_extractors": ["smiles", "compound", "threshold"]}
+            ),
+            (
+                # "alternative compounds for X" / "alternatives to X"
+                r"(alternative|substitute|replacement)s?\s*(compounds?|drugs?|molecules?)?\s*(for|to)\s+(?P<compound>\w+)",
+                {"intent": IntentType.SIMILARITY_SEARCH, "entity_extractors": ["compound", "threshold", "limit"]}
             ),
             (
                 r"molecules?.*(resemble|resembling)",
@@ -493,7 +559,8 @@ class IntentParser:
                 {"intent": IntentType.TARGET_DISEASE_LOOKUP, "entity_extractors": ["target"]}
             ),
             (
-                r"(drugs?|compounds?).*(targeting|target|for)\s+(?P<target>EGFR|BRAF|HER2|PD-?1|PD-?L1|KRAS|ALK|RET|MEK|BCR-ABL|\w+)",
+                # Only match when explicitly targeting known protein targets, not generic "compounds for X"
+                r"(drugs?).*(targeting|target|for)\s+(?P<target>EGFR|BRAF|HER2|PD-?1|PD-?L1|KRAS|ALK|RET|MEK|BCR-ABL|[A-Z][A-Z0-9]{2,})",
                 {"intent": IntentType.TARGET_DRUG_LOOKUP, "entity_extractors": ["target"]}
             ),
             (

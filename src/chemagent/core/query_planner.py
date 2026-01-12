@@ -280,20 +280,30 @@ class QueryPlanner:
         
         elif "compound" in entities or "chembl_id" in entities:
             # Need to look up compound first
-            lookup_step = PlanStep(
-                step_id=self._next_step_id(),
-                tool_name="chembl_search_by_name" if "compound" in entities else "chembl_get_compound",
-                args={
-                    "query": entities.get("compound") or entities.get("chembl_id")
-                },
-                depends_on=[],
-                can_run_parallel=False,
-                output_name="compound_data",
-                estimated_time_ms=500
-            )
+            if "compound" in entities:
+                lookup_step = PlanStep(
+                    step_id=self._next_step_id(),
+                    tool_name="chembl_search_by_name",
+                    args={"query": entities.get("compound")},
+                    depends_on=[],
+                    can_run_parallel=False,
+                    output_name="compound_data",
+                    estimated_time_ms=500
+                )
+                smiles_ref = "$compound_data.compounds[0].smiles"
+            else:
+                # chembl_id case - use chembl_get_compound with correct parameter
+                lookup_step = PlanStep(
+                    step_id=self._next_step_id(),
+                    tool_name="chembl_get_compound",
+                    args={"chembl_id": entities.get("chembl_id")},
+                    depends_on=[],
+                    can_run_parallel=False,
+                    output_name="compound_data",
+                    estimated_time_ms=500
+                )
+                smiles_ref = "$compound_data.smiles"
             steps.append(lookup_step)
-            # search_by_name returns {compounds: [...]}, get_compound returns {smiles: ...}
-            smiles_ref = "$compound_data.compounds[0].smiles" if "compound" in entities else "$compound_data.smiles"
         
         # Step 2: Standardize SMILES
         if smiles_ref:
@@ -388,43 +398,69 @@ class QueryPlanner:
     
     def _plan_compound_lookup(self, intent: ParsedIntent) -> QueryPlan:
         """
-        Plan compound lookup.
+        Plan comprehensive compound lookup.
         
         Steps:
         1. Search by name or get by ChEMBL ID
-        2. Optionally get additional properties
+        2. Get bioactivity data to show targets and mechanism
         """
         steps = []
         entities = intent.entities
         
         if "chembl_id" in entities:
+            chembl_id = entities["chembl_id"]
             lookup_step = PlanStep(
                 step_id=self._next_step_id(),
                 tool_name="chembl_get_compound",
-                args={"chembl_id": entities["chembl_id"]},
+                args={"chembl_id": chembl_id},
                 depends_on=[],
                 can_run_parallel=False,
                 output_name="compound",
                 estimated_time_ms=300
             )
+            steps.append(lookup_step)
+            
+            # Also get bioactivity data
+            activity_step = PlanStep(
+                step_id=self._next_step_id(),
+                tool_name="chembl_get_activities",
+                args={"chembl_id": chembl_id, "limit": 10},
+                depends_on=[],
+                can_run_parallel=True,  # Can run parallel with compound lookup
+                output_name="activities",
+                estimated_time_ms=400
+            )
+            steps.append(activity_step)
         else:
+            # For compound lookup, limit to 1 to get the best match
             lookup_step = PlanStep(
                 step_id=self._next_step_id(),
                 tool_name="chembl_search_by_name",
-                args={"query": entities.get("compound", "")},
+                args={"query": entities.get("compound", ""), "limit": 1},
                 depends_on=[],
                 can_run_parallel=False,
                 output_name="compound",
                 estimated_time_ms=500
             )
-        
-        steps.append(lookup_step)
+            steps.append(lookup_step)
+            
+            # Get activities for the found compound (depends on lookup to get chembl_id)
+            activity_step = PlanStep(
+                step_id=self._next_step_id(),
+                tool_name="chembl_get_activities",
+                args={"chembl_id": "$compound.compounds[0].chembl_id", "limit": 10},
+                depends_on=[lookup_step.step_id],
+                can_run_parallel=False,
+                output_name="activities",
+                estimated_time_ms=400
+            )
+            steps.append(activity_step)
         
         return QueryPlan(
             steps=steps,
             intent_type=intent.intent_type,
             estimated_time_ms=sum(s.estimated_time_ms for s in steps),
-            estimated_cost=0.01,
+            estimated_cost=0.02,
             can_cache=True
         )
     
@@ -817,13 +853,18 @@ class QueryPlanner:
         )    
     def _plan_comparison(self, intent: ParsedIntent) -> QueryPlan:
         """
-        Plan comparison of multiple compounds.
+        Plan comparison of multiple compounds, OR single compound with multiple data requests.
         
-        Steps:
+        Steps for multiple compounds:
         1. Look up each compound (parallel)
         2. Standardize SMILES for each (can be parallel across compounds)
         3. Calculate properties for each (can be parallel across compounds)
         4. Return for comparison formatting
+        
+        Steps for single compound (properties + targets):
+        1. Look up compound
+        2. Get properties
+        3. Get targets/activities (parallel with properties)
         
         Optimization: Group steps by phase to maximize parallelization
         """
@@ -831,13 +872,81 @@ class QueryPlanner:
         entities = intent.entities
         
         compounds = entities.get("compounds", [])
+        
+        # Single compound - likely "properties and targets for X"
         if len(compounds) < 2:
-            return QueryPlan(
-                steps=steps,
-                intent_type=intent.intent_type,
-                estimated_time_ms=0,
-                estimated_cost=0.0
-            )
+            chembl_id = entities.get("chembl_id")
+            compound_name = entities.get("compound")
+            
+            if chembl_id:
+                # Step 1: Get compound data
+                lookup_step = PlanStep(
+                    step_id=self._next_step_id(),
+                    tool_name="chembl_get_compound",
+                    args={"chembl_id": chembl_id},
+                    depends_on=[],
+                    can_run_parallel=False,
+                    output_name="compound_data",
+                    estimated_time_ms=300
+                )
+                steps.append(lookup_step)
+                
+                # Step 2: Get activities (targets)
+                activity_step = PlanStep(
+                    step_id=self._next_step_id(),
+                    tool_name="chembl_get_activities",
+                    args={"chembl_id": chembl_id},
+                    depends_on=[lookup_step.step_id],
+                    can_run_parallel=True,
+                    output_name="activities",
+                    estimated_time_ms=800
+                )
+                steps.append(activity_step)
+                
+                return QueryPlan(
+                    steps=steps,
+                    intent_type=intent.intent_type,
+                    estimated_time_ms=sum(s.estimated_time_ms for s in steps),
+                    estimated_cost=0.02
+                )
+            elif compound_name:
+                # Need to look up first
+                lookup_step = PlanStep(
+                    step_id=self._next_step_id(),
+                    tool_name="chembl_search_by_name",
+                    args={"query": compound_name},
+                    depends_on=[],
+                    can_run_parallel=False,
+                    output_name="compound_search",
+                    estimated_time_ms=500
+                )
+                steps.append(lookup_step)
+                
+                activity_step = PlanStep(
+                    step_id=self._next_step_id(),
+                    tool_name="chembl_get_activities",
+                    args={"chembl_id": "$compound_search.compounds[0].chembl_id"},
+                    depends_on=[lookup_step.step_id],
+                    can_run_parallel=True,
+                    output_name="activities",
+                    estimated_time_ms=800
+                )
+                steps.append(activity_step)
+                
+                return QueryPlan(
+                    steps=steps,
+                    intent_type=intent.intent_type,
+                    estimated_time_ms=sum(s.estimated_time_ms for s in steps),
+                    estimated_cost=0.02
+                )
+            else:
+                # No compound specified
+                return QueryPlan(
+                    steps=steps,
+                    intent_type=intent.intent_type,
+                    estimated_time_ms=0,
+                    estimated_cost=0.0
+                )
         
         # Phase 1: Look up all compounds (can run in parallel)
         lookup_step_ids = []

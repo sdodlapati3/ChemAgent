@@ -5,6 +5,7 @@ Executes query plans by running steps in order, managing dependencies,
 resolving variable references, and aggregating results.
 
 Supports both serial and parallel execution modes for improved performance.
+Supports progress callbacks for real-time streaming updates.
 """
 
 import re
@@ -18,6 +19,101 @@ from chemagent.core.query_planner import PlanStep, QueryPlan
 from chemagent.core.parallel import ParallelExecutor, ExecutionMetrics
 
 logger = logging.getLogger(__name__)
+
+
+# ============================================================================
+# Tool Descriptions for User-Friendly Progress Messages
+# ============================================================================
+
+TOOL_DESCRIPTIONS: Dict[str, str] = {
+    # ChEMBL tools
+    "chembl_search_by_name": "Searching ChEMBL database by compound name",
+    "chembl_get_compound": "Fetching compound details from ChEMBL",
+    "chembl_similarity_search": "Finding similar compounds in ChEMBL",
+    "chembl_substructure_search": "Searching for substructure matches",
+    "chembl_get_activities": "Retrieving bioactivity data",
+    
+    # RDKit tools
+    "rdkit_standardize_smiles": "Standardizing molecular structure",
+    "rdkit_calc_properties": "Calculating molecular properties",
+    "rdkit_calc_lipinski": "Evaluating Lipinski's Rule of Five",
+    "rdkit_convert_format": "Converting molecular format",
+    "rdkit_extract_scaffold": "Extracting molecular scaffold",
+    
+    # UniProt tools
+    "uniprot_get_protein": "Fetching protein information from UniProt",
+    "uniprot_search": "Searching UniProt database",
+    
+    # Open Targets tools
+    "opentargets_search": "Searching Open Targets Platform",
+    "opentargets_get_target": "Retrieving target information",
+    "opentargets_disease_targets": "Finding disease-associated targets",
+    "opentargets_target_diseases": "Finding target-associated diseases",
+    "opentargets_target_drugs": "Finding drugs for target",
+    
+    # PubChem tools
+    "pubchem_get_by_name": "Searching PubChem by name",
+    "pubchem_get_by_cid": "Fetching compound from PubChem",
+    "pubchem_similarity_search": "Finding similar compounds in PubChem",
+    "pubchem_get_bioassays": "Retrieving bioassay data from PubChem",
+    
+    # Structure tools
+    "structure_alphafold": "Fetching AlphaFold structure prediction",
+    "structure_pdb_by_uniprot": "Finding PDB structures for protein",
+    "structure_pdb_detail": "Retrieving PDB structure details",
+    "structure_pdb_by_ligand": "Finding structures containing ligand",
+    
+    # Utility tools
+    "filter_by_properties": "Filtering results by properties",
+}
+
+
+def get_tool_description(tool_name: str) -> str:
+    """Get user-friendly description for a tool."""
+    return TOOL_DESCRIPTIONS.get(tool_name, f"Running {tool_name}")
+
+
+# ============================================================================
+# Progress Event Types
+# ============================================================================
+
+@dataclass
+class ProgressEvent:
+    """
+    Progress event for streaming updates.
+    
+    Attributes:
+        status: Current status (parsing, planning, executing, step_complete, complete, error)
+        step: Current step number (1-indexed)
+        total_steps: Total number of steps
+        tool_name: Name of tool being executed
+        tool_description: User-friendly description
+        step_result: Result of completed step (optional)
+        message: Additional message
+    """
+    status: str
+    step: int = 0
+    total_steps: int = 0
+    tool_name: str = ""
+    tool_description: str = ""
+    step_result: Optional[Dict[str, Any]] = None
+    message: str = ""
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        return {
+            "status": self.status,
+            "step": self.step,
+            "total_steps": self.total_steps,
+            "tool_name": self.tool_name,
+            "tool_description": self.tool_description,
+            "step_result": self.step_result,
+            "message": self.message
+        }
+
+
+# Type alias for progress callback
+ProgressCallback = Callable[[ProgressEvent], None]
 
 
 class ExecutionStatus(Enum):
@@ -288,26 +384,34 @@ class QueryExecutor:
             max_workers: Maximum number of parallel workers (default: 4)
         """
         if tool_registry is None:
-            self.registry = ToolRegistry(use_real_tools=use_real_tools)
+            self.tool_registry = ToolRegistry(use_real_tools=use_real_tools)
         else:
-            self.registry = tool_registry
+            self.tool_registry = tool_registry
         self._execution_context: Dict[str, Any] = {}
         self.enable_parallel = enable_parallel
         self.parallel_executor = ParallelExecutor(max_workers=max_workers) if enable_parallel else None
         self.metrics = ExecutionMetrics()
     
-    def execute(self, plan: QueryPlan) -> ExecutionResult:
+    def execute(
+        self,
+        plan: QueryPlan,
+        progress_callback: Optional[ProgressCallback] = None
+    ) -> ExecutionResult:
         """
         Execute a query plan.
         
         Args:
             plan: Query plan to execute
+            progress_callback: Optional callback for progress updates.
+                              Called with ProgressEvent at each step.
             
         Returns:
             Execution result with outputs and status
             
         Example:
-            >>> result = executor.execute(plan)
+            >>> def on_progress(event):
+            ...     print(f"Step {event.step}/{event.total_steps}: {event.tool_description}")
+            >>> result = executor.execute(plan, progress_callback=on_progress)
             >>> if result.status == ExecutionStatus.COMPLETED:
             ...     print(result.final_output)
         """
@@ -315,6 +419,8 @@ class QueryExecutor:
         self.metrics = ExecutionMetrics()  # Reset metrics
         step_results = []
         start_time = datetime.now()
+        current_step = 0
+        total_steps = len(plan.steps)
         
         try:
             # Get parallel execution groups
@@ -329,21 +435,72 @@ class QueryExecutor:
                 if self.enable_parallel and len(group) > 1 and self.parallel_executor is not None:
                     # Execute group in parallel
                     self.metrics.steps_parallelized += len(group)
+                    
+                    # Emit progress for parallel group
+                    if progress_callback:
+                        tool_names = [s.tool_name for s in group]
+                        progress_callback(ProgressEvent(
+                            status="executing_parallel",
+                            step=current_step + 1,
+                            total_steps=total_steps,
+                            tool_name=", ".join(tool_names),
+                            tool_description=f"Running {len(group)} steps in parallel",
+                            message=f"Parallel execution: {', '.join(get_tool_description(t) for t in tool_names)}"
+                        ))
+                    
                     group_results = self.parallel_executor.execute_group_parallel(
                         group,
                         self._execute_step,
                         self._execution_context
                     )
+                    current_step += len(group)
+                    
+                    # Emit completion for parallel group
+                    if progress_callback:
+                        progress_callback(ProgressEvent(
+                            status="parallel_complete",
+                            step=current_step,
+                            total_steps=total_steps,
+                            message=f"Completed {len(group)} parallel steps"
+                        ))
                 else:
                     # Execute serially
                     group_results = []
                     for step in group:
+                        current_step += 1
+                        
+                        # Emit progress before execution
+                        if progress_callback:
+                            progress_callback(ProgressEvent(
+                                status="executing",
+                                step=current_step,
+                                total_steps=total_steps,
+                                tool_name=step.tool_name,
+                                tool_description=get_tool_description(step.tool_name),
+                                message=f"Executing step {current_step} of {total_steps}"
+                            ))
+                        
                         step_result = self._execute_step(step)
                         group_results.append(step_result)
                         
                         # Store output in context
                         if step_result.status == ExecutionStatus.COMPLETED:
                             self._execution_context[step.output_name] = step_result.output
+                        
+                        # Emit progress after execution
+                        if progress_callback:
+                            progress_callback(ProgressEvent(
+                                status="step_complete",
+                                step=current_step,
+                                total_steps=total_steps,
+                                tool_name=step.tool_name,
+                                tool_description=get_tool_description(step.tool_name),
+                                step_result={
+                                    "success": step_result.status == ExecutionStatus.COMPLETED,
+                                    "duration_ms": step_result.duration_ms,
+                                    "error": step_result.error
+                                }
+                            ))
                 
                 step_results.extend(group_results)
                 
@@ -437,7 +594,7 @@ class QueryExecutor:
             resolved_args = self._resolve_variables(step.args)
             
             # Get tool
-            tool = self.registry.get(step.tool_name)
+            tool = self.tool_registry.get(step.tool_name)
             if not tool:
                 return StepResult(
                     step_id=step.step_id,

@@ -89,3 +89,17 @@ docs/_templates/
 tmp/
 temp/
 *.tmp
+
+# Generated coverage reports
+outputs/htmlcov/
+.coverage
+
+# Cache directories
+.cache/
+.pytest_cache/
+.gradio/
+
+# Log files
+logs/*.log
+logs/*.err
+logs/*.out

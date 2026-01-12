@@ -1,0 +1,9 @@
+{
+  "servers": {
+    "chemagent": {
+      "type": "stdio",
+      "command": "chemagent-mcp",
+      "args": []
+    }
+  }
+}

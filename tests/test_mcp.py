@@ -100,7 +100,8 @@ class TestChemAgentIntegration:
         mol = Chem.MolFromSmiles("CCO")  # ethanol
         result = rdkit.calc_lipinski(mol)
         assert result is not None
-        assert hasattr(result, 'passes_all') or "passes" in str(result).lower()
+        assert hasattr(result, 'passes')
+        assert result.passes == True  # Ethanol should pass Lipinski
     
     def test_smiles_validation(self):
         """Test SMILES are handled correctly."""
@@ -112,6 +113,53 @@ class TestChemAgentIntegration:
         props = rdkit.calc_molecular_properties(mol)
         assert props is not None
         assert props.molecular_weight > 100  # Aspirin MW is ~180
+
+
+class TestMCPAdvancedTools:
+    """Tests for advanced combined MCP tools (Phase F.4)."""
+    
+    def test_scaffold_extraction(self):
+        """Test scaffold extraction for aspirin."""
+        from rdkit import Chem
+        from rdkit.Chem.Scaffolds import MurckoScaffold
+        
+        mol = Chem.MolFromSmiles("CC(=O)Oc1ccccc1C(=O)O")  # aspirin
+        core = MurckoScaffold.GetScaffoldForMol(mol)
+        scaffold_smiles = Chem.MolToSmiles(core)
+        assert scaffold_smiles is not None
+        assert len(scaffold_smiles) > 0
+    
+    def test_compound_comparison(self):
+        """Test compound similarity comparison."""
+        from rdkit import Chem, DataStructs
+        from rdkit.Chem import AllChem
+        
+        mol1 = Chem.MolFromSmiles("CC(=O)Oc1ccccc1C(=O)O")  # aspirin
+        mol2 = Chem.MolFromSmiles("CC(C)Cc1ccc(cc1)C(C)C(=O)O")  # ibuprofen
+        
+        fp1 = AllChem.GetMorganFingerprintAsBitVect(mol1, 2, nBits=2048)
+        fp2 = AllChem.GetMorganFingerprintAsBitVect(mol2, 2, nBits=2048)
+        
+        similarity = DataStructs.TanimotoSimilarity(fp1, fp2)
+        assert 0 <= similarity <= 1
+    
+    def test_batch_properties(self):
+        """Test batch property calculation."""
+        from rdkit import Chem
+        from chemagent.tools.rdkit_tools import RDKitTools
+        
+        rdkit = RDKitTools()
+        smiles_list = ["CCO", "CC(=O)O", "c1ccccc1"]
+        
+        results = []
+        for smiles in smiles_list:
+            mol = Chem.MolFromSmiles(smiles)
+            if mol:
+                props = rdkit.calc_molecular_properties(mol)
+                results.append(props)
+        
+        assert len(results) == 3
+        assert all(r.molecular_weight > 0 for r in results)
 
 
 class TestMCPResources:

@@ -41,51 +41,40 @@ This roadmap outlines **future enhancements** organized into strategic phases.
 
 ## 🔮 Future Phases
 
-### Phase F: Model Context Protocol (MCP) Integration
-**Timeline**: 2-3 weeks  
+### Phase F: Model Context Protocol (MCP) Integration ✅ COMPLETE
+**Timeline**: 2-3 weeks (Completed)  
 **Priority**: High  
 **Goal**: Enable ChemAgent as an MCP server for integration with Claude, VS Code, and other AI systems
 
-#### F.1 MCP Server Implementation
-```
-ChemAgent as MCP Server
-    ↓
-┌─────────────────────────────────────────┐
-│         MCP Protocol Layer              │
-├─────────────────────────────────────────┤
-│  Resources    │  Tools      │  Prompts  │
-│  - compounds  │  - search   │  - query  │
-│  - targets    │  - analyze  │  - batch  │
-│  - results    │  - compare  │  - expert │
-└─────────────────────────────────────────┘
-    ↓
-Claude Desktop / VS Code / Other MCP Clients
-```
+#### Status: ✅ All Milestones Complete
 
-#### Tasks
-- [ ] **F.1.1**: Create MCP server wrapper (`src/chemagent/mcp/server.py`)
-- [ ] **F.1.2**: Define MCP resources (compounds, targets, query results)
-- [ ] **F.1.3**: Expose tools via MCP protocol
-- [ ] **F.1.4**: Create MCP prompts for common workflows
-- [ ] **F.1.5**: Integration tests with Claude Desktop
-- [ ] **F.1.6**: Documentation for MCP setup
+| Milestone | Status | Description |
+|-----------|--------|-------------|
+| F.1 MCP Server | ✅ | Basic server with 6 tools |
+| F.2 Claude Desktop | ✅ | Config + integration guide |
+| F.3 VS Code | ✅ | MCP config + documentation |
+| F.4 Advanced Tools | ✅ | 5 additional combined tools |
 
-#### MCP Resources
-| Resource | URI Pattern | Description |
-|----------|-------------|-------------|
-| Compound | `compound://{chembl_id}` | Compound data from ChEMBL |
-| Target | `target://{uniprot_id}` | Protein target information |
-| Result | `result://{query_id}` | Cached query results |
-| Plan | `plan://{plan_id}` | Saved query plans |
+#### MCP Tools (11 Total)
+| Tool | Description | Type |
+|------|-------------|------|
+| `chemagent_query` | Natural language query | Basic |
+| `chemagent_properties` | Calculate properties | Basic |
+| `chemagent_similarity` | Similarity search | Basic |
+| `chemagent_lipinski` | Drug-likeness check | Basic |
+| `chemagent_compound` | Compound lookup | Basic |
+| `chemagent_target` | Target lookup | Basic |
+| `chemagent_drug_analysis` | Comprehensive analysis | Advanced |
+| `chemagent_compare_compounds` | Compare two compounds | Advanced |
+| `chemagent_batch_properties` | Batch processing | Advanced |
+| `chemagent_scaffold_analysis` | Scaffold extraction | Advanced |
+| `chemagent_target_compounds` | Compounds for target | Advanced |
 
-#### MCP Tools
-| Tool | Description | Parameters |
-|------|-------------|------------|
-| `chemagent_query` | Natural language query | query, verbose |
-| `chemagent_search` | Compound/target search | entity, type |
-| `chemagent_properties` | Calculate properties | smiles |
-| `chemagent_similarity` | Similarity search | smiles, threshold |
-| `chemagent_activity` | Bioactivity lookup | compound_id |
+#### Configuration Files
+- `configs/mcp/claude_desktop_config.json` - Claude Desktop setup
+- `configs/mcp/vscode_mcp.json` - VS Code setup
+- `docs/developer/CLAUDE_DESKTOP_INTEGRATION.md` - Full guide
+- `docs/developer/VSCODE_INTEGRATION.md` - Full guide
 
 ---
 

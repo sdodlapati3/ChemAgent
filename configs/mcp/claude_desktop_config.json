@@ -1,0 +1,11 @@
+{
+  "mcpServers": {
+    "chemagent": {
+      "command": "chemagent-mcp",
+      "env": {
+        "CHEMAGENT_CACHE_DIR": "~/.cache/chemagent",
+        "CHEMAGENT_LOG_LEVEL": "INFO"
+      }
+    }
+  }
+}

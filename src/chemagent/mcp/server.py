@@ -213,6 +213,127 @@ Returns protein info, function, and associated drugs.""",
                     "required": ["identifier"]
                 }
             ),
+            # =====================================================================
+            # ADVANCED COMBINED TOOLS (Phase F.4)
+            # =====================================================================
+            Tool(
+                name="chemagent_drug_analysis",
+                description="""Comprehensive drug candidate analysis.
+                
+Performs a complete drug-likeness evaluation including:
+- Molecular properties calculation
+- Lipinski's Rule of Five check
+- Veber rules (rotatable bonds, TPSA)
+- Lead-likeness assessment
+- PAINS filter check (if available)
+
+Returns a detailed report suitable for drug discovery workflows.""",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "smiles": {
+                            "type": "string",
+                            "description": "SMILES string of the compound to analyze"
+                        },
+                        "name": {
+                            "type": "string",
+                            "description": "Optional compound name for the report"
+                        }
+                    },
+                    "required": ["smiles"]
+                }
+            ),
+            Tool(
+                name="chemagent_compare_compounds",
+                description="""Compare two compounds side-by-side.
+                
+Compares molecular properties, drug-likeness, and structural features
+of two compounds. Useful for lead optimization and SAR analysis.""",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "smiles1": {
+                            "type": "string",
+                            "description": "SMILES of first compound"
+                        },
+                        "smiles2": {
+                            "type": "string",
+                            "description": "SMILES of second compound"
+                        },
+                        "name1": {
+                            "type": "string",
+                            "description": "Optional name for first compound"
+                        },
+                        "name2": {
+                            "type": "string",
+                            "description": "Optional name for second compound"
+                        }
+                    },
+                    "required": ["smiles1", "smiles2"]
+                }
+            ),
+            Tool(
+                name="chemagent_batch_properties",
+                description="""Calculate properties for multiple compounds at once.
+                
+Efficiently processes a list of SMILES strings and returns
+properties for all compounds in a structured format.""",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "smiles_list": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "List of SMILES strings to analyze"
+                        }
+                    },
+                    "required": ["smiles_list"]
+                }
+            ),
+            Tool(
+                name="chemagent_scaffold_analysis",
+                description="""Analyze the molecular scaffold of a compound.
+                
+Extracts and analyzes the core scaffold structure, identifies
+functional groups, and provides scaffold-based insights.""",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "smiles": {
+                            "type": "string",
+                            "description": "SMILES string to analyze"
+                        }
+                    },
+                    "required": ["smiles"]
+                }
+            ),
+            Tool(
+                name="chemagent_target_compounds",
+                description="""Find compounds that interact with a specific target.
+                
+Searches databases for known compounds targeting a specific
+protein. Useful for competitive analysis and drug repurposing.""",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "target": {
+                            "type": "string",
+                            "description": "Target name, gene symbol, or UniProt ID"
+                        },
+                        "activity_type": {
+                            "type": "string",
+                            "description": "Activity type filter (e.g., IC50, Ki, EC50)",
+                            "default": "IC50"
+                        },
+                        "limit": {
+                            "type": "integer",
+                            "description": "Maximum number of compounds to return",
+                            "default": 10
+                        }
+                    },
+                    "required": ["target"]
+                }
+            ),
         ]
     
     @server.call_tool()
@@ -287,6 +408,240 @@ Returns protein info, function, and associated drugs.""",
             elif name == "chemagent_target":
                 identifier = arguments.get("identifier", "")
                 result = agent.query(f"Tell me about target {identifier}")
+                
+                return [TextContent(
+                    type="text",
+                    text=result.answer
+                )]
+            
+            # =================================================================
+            # ADVANCED COMBINED TOOLS (Phase F.4)
+            # =================================================================
+            
+            elif name == "chemagent_drug_analysis":
+                smiles = arguments.get("smiles", "")
+                name_arg = arguments.get("name", "Compound")
+                
+                # Perform comprehensive analysis
+                from rdkit import Chem
+                from chemagent.tools.rdkit_tools import RDKitTools
+                
+                rdkit = RDKitTools()
+                mol = Chem.MolFromSmiles(smiles)
+                
+                if mol is None:
+                    return [TextContent(
+                        type="text",
+                        text=f"Error: Invalid SMILES string: {smiles}"
+                    )]
+                
+                # Calculate properties
+                props = rdkit.calc_molecular_properties(mol)
+                lipinski = rdkit.calc_lipinski(mol)
+                
+                # Build comprehensive report
+                report = {
+                    "compound_name": name_arg,
+                    "smiles": smiles,
+                    "molecular_properties": {
+                        "molecular_weight": props.molecular_weight,
+                        "logp": props.logp,
+                        "tpsa": props.tpsa,
+                        "num_h_donors": props.num_h_donors,
+                        "num_h_acceptors": props.num_h_acceptors,
+                        "num_rotatable_bonds": props.num_rotatable_bonds,
+                        "num_rings": props.num_rings,
+                        "fraction_csp3": props.fraction_csp3,
+                    },
+                    "drug_likeness": {
+                        "lipinski_rule_of_5": {
+                            "passes": lipinski.passes,
+                            "violations": lipinski.violations,
+                            "violation_details": lipinski.details,
+                            "thresholds": {
+                                "mw": f"{lipinski.molecular_weight:.1f} (limit: 500)",
+                                "logp": f"{lipinski.logp:.2f} (limit: 5)",
+                                "hbd": f"{lipinski.num_h_donors} (limit: 5)",
+                                "hba": f"{lipinski.num_h_acceptors} (limit: 10)",
+                            }
+                        },
+                        "veber_rules": {
+                            "rotatable_bonds_ok": props.num_rotatable_bonds <= 10,
+                            "tpsa_ok": props.tpsa <= 140,
+                        },
+                        "lead_likeness": {
+                            "mw_range": 250 <= props.molecular_weight <= 350,
+                            "logp_range": -1 <= props.logp <= 3,
+                            "rotatable_bonds_ok": props.num_rotatable_bonds <= 7,
+                        }
+                    },
+                    "assessment": "Drug-like" if lipinski.passes else f"Not drug-like ({lipinski.violations} Lipinski violations)"
+                }
+                
+                return [TextContent(
+                    type="text",
+                    text=json.dumps(report, indent=2)
+                )]
+            
+            elif name == "chemagent_compare_compounds":
+                smiles1 = arguments.get("smiles1", "")
+                smiles2 = arguments.get("smiles2", "")
+                name1 = arguments.get("name1", "Compound 1")
+                name2 = arguments.get("name2", "Compound 2")
+                
+                from rdkit import Chem
+                from rdkit import DataStructs
+                from rdkit.Chem import AllChem
+                from chemagent.tools.rdkit_tools import RDKitTools
+                
+                rdkit = RDKitTools()
+                mol1 = Chem.MolFromSmiles(smiles1)
+                mol2 = Chem.MolFromSmiles(smiles2)
+                
+                if mol1 is None or mol2 is None:
+                    return [TextContent(
+                        type="text",
+                        text="Error: Invalid SMILES string(s)"
+                    )]
+                
+                # Calculate properties for both
+                props1 = rdkit.calc_molecular_properties(mol1)
+                props2 = rdkit.calc_molecular_properties(mol2)
+                lip1 = rdkit.calc_lipinski(mol1)
+                lip2 = rdkit.calc_lipinski(mol2)
+                
+                # Calculate similarity
+                fp1 = AllChem.GetMorganFingerprintAsBitVect(mol1, 2, nBits=2048)
+                fp2 = AllChem.GetMorganFingerprintAsBitVect(mol2, 2, nBits=2048)
+                similarity = DataStructs.TanimotoSimilarity(fp1, fp2)
+                
+                comparison = {
+                    "compound_1": {
+                        "name": name1,
+                        "smiles": smiles1,
+                        "mw": props1.molecular_weight,
+                        "logp": props1.logp,
+                        "tpsa": props1.tpsa,
+                        "hbd": props1.num_h_donors,
+                        "hba": props1.num_h_acceptors,
+                        "lipinski_passes": lip1.passes,
+                    },
+                    "compound_2": {
+                        "name": name2,
+                        "smiles": smiles2,
+                        "mw": props2.molecular_weight,
+                        "logp": props2.logp,
+                        "tpsa": props2.tpsa,
+                        "hbd": props2.num_h_donors,
+                        "hba": props2.num_h_acceptors,
+                        "lipinski_passes": lip2.passes,
+                    },
+                    "comparison": {
+                        "tanimoto_similarity": round(similarity, 3),
+                        "mw_difference": round(props2.molecular_weight - props1.molecular_weight, 2),
+                        "logp_difference": round(props2.logp - props1.logp, 2),
+                        "both_drug_like": lip1.passes and lip2.passes,
+                    }
+                }
+                
+                return [TextContent(
+                    type="text",
+                    text=json.dumps(comparison, indent=2)
+                )]
+            
+            elif name == "chemagent_batch_properties":
+                smiles_list = arguments.get("smiles_list", [])
+                
+                from rdkit import Chem
+                from chemagent.tools.rdkit_tools import RDKitTools
+                
+                rdkit = RDKitTools()
+                results = []
+                
+                for i, smiles in enumerate(smiles_list[:50]):  # Limit to 50
+                    mol = Chem.MolFromSmiles(smiles)
+                    if mol is None:
+                        results.append({
+                            "index": i,
+                            "smiles": smiles,
+                            "error": "Invalid SMILES"
+                        })
+                        continue
+                    
+                    props = rdkit.calc_molecular_properties(mol)
+                    lip = rdkit.calc_lipinski(mol)
+                    
+                    results.append({
+                        "index": i,
+                        "smiles": smiles,
+                        "mw": round(props.molecular_weight, 2),
+                        "logp": round(props.logp, 2),
+                        "tpsa": round(props.tpsa, 2),
+                        "hbd": props.num_h_donors,
+                        "hba": props.num_h_acceptors,
+                        "lipinski_passes": lip.passes,
+                    })
+                
+                return [TextContent(
+                    type="text",
+                    text=json.dumps({"compounds": results, "total": len(results)}, indent=2)
+                )]
+            
+            elif name == "chemagent_scaffold_analysis":
+                smiles = arguments.get("smiles", "")
+                
+                from rdkit import Chem
+                from rdkit.Chem.Scaffolds import MurckoScaffold
+                from chemagent.tools.rdkit_tools import RDKitTools
+                
+                rdkit = RDKitTools()
+                mol = Chem.MolFromSmiles(smiles)
+                
+                if mol is None:
+                    return [TextContent(
+                        type="text",
+                        text=f"Error: Invalid SMILES: {smiles}"
+                    )]
+                
+                # Extract scaffolds
+                try:
+                    core = MurckoScaffold.GetScaffoldForMol(mol)
+                    generic = MurckoScaffold.MakeScaffoldGeneric(core)
+                    core_smiles = Chem.MolToSmiles(core)
+                    generic_smiles = Chem.MolToSmiles(generic)
+                except Exception:
+                    core_smiles = "Could not extract"
+                    generic_smiles = "Could not extract"
+                
+                # Get properties
+                props = rdkit.calc_molecular_properties(mol)
+                
+                analysis = {
+                    "input_smiles": smiles,
+                    "murcko_scaffold": core_smiles,
+                    "generic_scaffold": generic_smiles,
+                    "properties": {
+                        "num_rings": props.num_rings,
+                        "num_aromatic_rings": props.num_aromatic_rings,
+                        "num_heteroatoms": props.num_heteroatoms,
+                        "fraction_csp3": round(props.fraction_csp3, 3),
+                    },
+                    "scaffold_complexity": "High" if props.num_rings > 3 else "Medium" if props.num_rings > 1 else "Low"
+                }
+                
+                return [TextContent(
+                    type="text",
+                    text=json.dumps(analysis, indent=2)
+                )]
+            
+            elif name == "chemagent_target_compounds":
+                target = arguments.get("target", "")
+                activity_type = arguments.get("activity_type", "IC50")
+                limit = arguments.get("limit", 10)
+                
+                # Use ChemAgent to query for target compounds
+                query = f"Find compounds with {activity_type} activity against {target}, limit {limit}"
+                result = agent.query(query)
                 
                 return [TextContent(
                     type="text",

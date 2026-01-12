@@ -89,7 +89,7 @@ class MetricsCalculator:
         )
         metrics.content_accuracy = content_correct / metrics.total_queries
         
-        error_queries = [r for r in results if not r.expected_result.get("success", True)]
+        error_queries = [r for r in results if r.expected_result and not r.expected_result.get("success", True)]
         if error_queries:
             error_handled = sum(
                 1 for r in error_queries

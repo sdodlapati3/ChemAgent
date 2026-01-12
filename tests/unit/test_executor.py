@@ -597,6 +597,7 @@ class TestStringRepresentations:
         
         result = StepResult(
             step_id=0,
+            tool_name="test_tool",
             status=ExecutionStatus.COMPLETED,
             output={"test": "data"},
             start_time=datetime.now(),

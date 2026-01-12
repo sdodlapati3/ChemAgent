@@ -37,6 +37,13 @@ from chemagent.core.context_manager import (
     extract_results_summary,
 )
 
+# LLM availability flag for backward compatibility
+try:
+    import litellm
+    LLM_AVAILABLE = True
+except ImportError:
+    LLM_AVAILABLE = False
+
 # OptimalAgent (hybrid tiered architecture - requires litellm for LLM features)
 try:
     from chemagent.core.optimal_agent import (
@@ -133,6 +140,8 @@ __all__ = [
     "ToolRegistry",
     "format_response",
     "get_tool_description",
+    # LLM availability
+    "LLM_AVAILABLE",
     # OptimalAgent (hybrid tiered architecture)
     "OptimalAgent",
     "AgentResponse",

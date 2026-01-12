@@ -155,7 +155,7 @@ class TestMetricsCalculator:
         assert metrics.passed == 1
         assert metrics.failed == 1
         assert metrics.pass_rate == 0.5
-        assert metrics.avg_execution_time == 0.15
+        assert abs(metrics.avg_execution_time - 0.15) < 0.001  # Float comparison
     
     def test_calculate_by_category(self):
         """Test metrics grouped by category."""

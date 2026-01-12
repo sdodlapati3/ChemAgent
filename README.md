@@ -49,6 +49,9 @@ print(result.answer)
 - 🌐 **REST API** - FastAPI server with 14 endpoints
 - 🖥️ **Web UI** - Gradio interface for interactive exploration
 - 📈 **Production Ready** - Docker, monitoring, comprehensive tests
+- 💾 **Query Persistence** - Save and replay query plans (SQLite)
+- 📚 **Export to Reference Managers** - BibTeX, RIS, JSON, Markdown output
+- 🔒 **Verifier Gate** - Hallucination prevention with claim verification
 
 ---
 
@@ -230,16 +233,18 @@ We welcome contributions! See [CONTRIBUTING.md](CONTRIBUTING.md) for:
 
 - **Version**: 1.0.0
 - **Status**: Production Ready
-- **Test Coverage**: 92% (159/172 tests passing)
+- **Test Coverage**: 92% (290/292 tests passing)
 - **Success Rate**: 96.2% (validated on 478 queries)
-- **Last Updated**: January 11, 2026
+- **Last Updated**: January 12, 2026
 
 ### Recent Milestones
-- ✅ Phase 1-4 Complete (Foundation → Deployment)
+- ✅ Phase A: Foundation (OptimalAgent, 26 tools, Pattern Parser)
+- ✅ Phase B: Provenance Layer (Evidence tracking, Open Targets)
+- ✅ Phase C: Evaluation Harness (Assertion framework, Task suite)
+- ✅ Phase D: Verifier Gate (Claim verification, Hallucination prevention)
+- ✅ Phase E: Polish (LLM Router, Persistence, Export)
 - ✅ Comprehensive testing (976 queries across 3 rounds)
-- ✅ Critical bugs fixed (activity lookups, Lipinski checks)
 - ✅ Production deployment infrastructure
-- 🔄 Next: LLM integration for improved intent accuracy
 
 ---
 

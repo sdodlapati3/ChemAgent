@@ -334,6 +334,205 @@ protein. Useful for competitive analysis and drug repurposing.""",
                     "required": ["target"]
                 }
             ),
+            # =====================================================================
+            # ADMET PREDICTION TOOLS (Phase H)
+            # =====================================================================
+            Tool(
+                name="chemagent_admet",
+                description="""Comprehensive ADMET (Absorption, Distribution, Metabolism, 
+Excretion, Toxicity) prediction for drug discovery.
+
+Returns detailed predictions including:
+- Absorption: HIA, Caco-2, bioavailability, solubility
+- Distribution: BBB penetration, plasma protein binding, P-gp
+- Metabolism: CYP450 inhibition/substrate predictions, stability
+- Excretion: Renal clearance, half-life estimation
+- Toxicity: PAINS alerts, Brenk alerts, hERG, mutagenicity
+- Drug-likeness: Lipinski, Veber, Ghose, Egan, Muegge filters""",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "smiles": {
+                            "type": "string",
+                            "description": "SMILES string of the compound"
+                        },
+                        "name": {
+                            "type": "string",
+                            "description": "Optional compound name"
+                        }
+                    },
+                    "required": ["smiles"]
+                }
+            ),
+            Tool(
+                name="chemagent_toxicity_alerts",
+                description="""Check for structural toxicity alerts.
+                
+Screens compound for:
+- PAINS (Pan-Assay Interference Compounds)
+- Brenk filters (unwanted substructures)
+- NIH screening alerts
+- Mutagenicity alerts (nitro, aromatic amines)
+- hERG liability (cardiac safety)""",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "smiles": {
+                            "type": "string",
+                            "description": "SMILES string to screen"
+                        }
+                    },
+                    "required": ["smiles"]
+                }
+            ),
+            
+            # =================================================================
+            # DRUG INTERACTION TOOLS (Phase H.3 - DrugBank Integration)
+            # =================================================================
+            
+            Tool(
+                name="chemagent_drug_interactions",
+                description="""Check for drug-drug interactions.
+                
+Uses FDA label data to identify potential interactions between medications.
+Provides severity levels (major/moderate/minor) and recommendations.
+
+Example queries:
+- Check interaction between warfarin and aspirin
+- Screen multiple medications for interactions""",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "drug_a": {
+                            "type": "string",
+                            "description": "First drug name"
+                        },
+                        "drug_b": {
+                            "type": "string",
+                            "description": "Second drug name"
+                        }
+                    },
+                    "required": ["drug_a", "drug_b"]
+                }
+            ),
+            Tool(
+                name="chemagent_drug_info",
+                description="""Get comprehensive drug information.
+                
+Retrieves:
+- Drug identifiers (RXCUI, generic/brand names)
+- FDA approval status
+- Indications and description
+- Known drug interactions
+- Adverse event information""",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "drug_name": {
+                            "type": "string",
+                            "description": "Drug name (generic or brand)"
+                        }
+                    },
+                    "required": ["drug_name"]
+                }
+            ),
+            Tool(
+                name="chemagent_interaction_check",
+                description="""Check interactions among multiple drugs.
+                
+Screens a list of medications for all pairwise interactions.
+Useful for polypharmacy safety checks.
+
+Returns summary with major interaction warnings.""",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "drugs": {
+                            "type": "array",
+                            "items": {"type": "string"},
+                            "description": "List of drug names to check"
+                        }
+                    },
+                    "required": ["drugs"]
+                }
+            ),
+            
+            # =================================================================
+            # LITERATURE SEARCH TOOLS (Phase G - PubMed Integration)
+            # =================================================================
+            
+            Tool(
+                name="chemagent_pubmed_search",
+                description="""Search PubMed for scientific literature.
+                
+Searches PubMed database for relevant articles.
+Supports advanced query syntax including:
+- Keyword searches
+- MeSH term searches
+- Author and journal filters
+- Date range filters
+
+Returns article titles, abstracts, authors, and DOIs.""",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "query": {
+                            "type": "string",
+                            "description": "PubMed search query"
+                        },
+                        "max_results": {
+                            "type": "integer",
+                            "description": "Maximum number of results (default 10)",
+                            "default": 10
+                        }
+                    },
+                    "required": ["query"]
+                }
+            ),
+            Tool(
+                name="chemagent_compound_literature",
+                description="""Search literature for a specific compound.
+                
+Finds scientific articles related to a drug or chemical compound.
+Includes mechanism of action studies, clinical trials, and reviews.""",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "compound_name": {
+                            "type": "string",
+                            "description": "Compound or drug name"
+                        },
+                        "max_results": {
+                            "type": "integer",
+                            "description": "Maximum results (default 10)",
+                            "default": 10
+                        }
+                    },
+                    "required": ["compound_name"]
+                }
+            ),
+            Tool(
+                name="chemagent_target_literature",
+                description="""Search literature for a drug target.
+                
+Finds scientific articles about a specific drug target protein or gene.
+Useful for understanding target biology and druggability.""",
+                inputSchema={
+                    "type": "object",
+                    "properties": {
+                        "target_name": {
+                            "type": "string",
+                            "description": "Target name (e.g., EGFR, ACE2)"
+                        },
+                        "max_results": {
+                            "type": "integer",
+                            "description": "Maximum results (default 10)",
+                            "default": 10
+                        }
+                    },
+                    "required": ["target_name"]
+                }
+            ),
         ]
     
     @server.call_tool()
@@ -646,6 +845,292 @@ protein. Useful for competitive analysis and drug repurposing.""",
                 return [TextContent(
                     type="text",
                     text=result.answer
+                )]
+            
+            # =================================================================
+            # ADMET PREDICTION TOOLS (Phase H)
+            # =================================================================
+            
+            elif name == "chemagent_admet":
+                smiles = arguments.get("smiles", "")
+                name_arg = arguments.get("name")
+                
+                from chemagent.tools.admet_predictor import ADMETPredictor
+                
+                predictor = ADMETPredictor()
+                report = predictor.predict(smiles, name_arg)
+                
+                # Build comprehensive response
+                result = {
+                    "compound": report.compound_name or "Unknown",
+                    "smiles": report.smiles,
+                    "overall_score": round(report.overall_score, 2),
+                    "assessment": report.overall_assessment,
+                    "physicochemical": {
+                        "molecular_weight": round(report.physicochemical.molecular_weight, 2),
+                        "logp": round(report.physicochemical.logp, 2),
+                        "tpsa": round(report.physicochemical.tpsa, 2),
+                        "h_donors": report.physicochemical.num_h_donors,
+                        "h_acceptors": report.physicochemical.num_h_acceptors,
+                        "rotatable_bonds": report.physicochemical.num_rotatable_bonds,
+                        "rings": report.physicochemical.num_rings,
+                        "fraction_csp3": round(report.physicochemical.fraction_csp3, 3),
+                    },
+                    "absorption": {
+                        "human_intestinal_absorption": report.absorption.human_intestinal_absorption,
+                        "caco2_permeability": report.absorption.caco2_permeability,
+                        "bioavailability_score": round(report.absorption.bioavailability_score, 2),
+                        "solubility": report.absorption.solubility_class,
+                    },
+                    "distribution": {
+                        "bbb_permeant": report.distribution.bbb_permeant,
+                        "plasma_protein_binding": report.distribution.ppb_class,
+                        "pgp_substrate": report.distribution.pgp_substrate,
+                    },
+                    "metabolism": {
+                        "stability": report.metabolism.metabolic_stability,
+                        "cyp3a4_substrate": report.metabolism.cyp3a4_substrate,
+                        "cyp3a4_inhibitor": report.metabolism.cyp3a4_inhibitor,
+                        "cyp2d6_substrate": report.metabolism.cyp2d6_substrate,
+                        "cyp2d6_inhibitor": report.metabolism.cyp2d6_inhibitor,
+                    },
+                    "excretion": {
+                        "renal_clearance": report.excretion.renal_clearance_class,
+                        "half_life": report.excretion.half_life_class,
+                    },
+                    "toxicity": {
+                        "risk": report.toxicity.toxicity_risk,
+                        "pains_alerts": len(report.toxicity.pains_alerts),
+                        "brenk_alerts": len(report.toxicity.brenk_alerts),
+                        "ames_mutagenicity": report.toxicity.ames_mutagenicity,
+                        "herg_risk": report.toxicity.herg_inhibition,
+                    },
+                    "drug_likeness": {
+                        "lipinski_passes": report.drug_likeness.lipinski_passes,
+                        "veber_passes": report.drug_likeness.veber_passes,
+                        "score": round(report.drug_likeness.drug_likeness_score, 2),
+                        "violations": report.drug_likeness.violations,
+                    },
+                    "key_concerns": report.key_concerns,
+                    "recommendations": report.recommendations,
+                }
+                
+                return [TextContent(
+                    type="text",
+                    text=json.dumps(result, indent=2)
+                )]
+            
+            elif name == "chemagent_toxicity_alerts":
+                smiles = arguments.get("smiles", "")
+                
+                from chemagent.tools.admet_predictor import ADMETPredictor
+                
+                predictor = ADMETPredictor()
+                report = predictor.predict(smiles)
+                
+                alerts = []
+                for alert in report.toxicity.pains_alerts:
+                    alerts.append({
+                        "type": "PAINS",
+                        "name": alert.alert_name,
+                        "severity": alert.severity,
+                        "description": alert.description,
+                    })
+                for alert in report.toxicity.brenk_alerts:
+                    alerts.append({
+                        "type": "Brenk",
+                        "name": alert.alert_name,
+                        "severity": alert.severity,
+                        "description": alert.description,
+                    })
+                for alert in report.toxicity.other_alerts:
+                    alerts.append({
+                        "type": alert.alert_type,
+                        "name": alert.alert_name,
+                        "severity": alert.severity,
+                        "description": alert.description,
+                    })
+                
+                result = {
+                    "smiles": smiles,
+                    "toxicity_risk": report.toxicity.toxicity_risk,
+                    "total_alerts": len(alerts),
+                    "ames_mutagenicity": report.toxicity.ames_mutagenicity,
+                    "herg_risk": report.toxicity.herg_inhibition,
+                    "hepatotoxicity_risk": report.toxicity.hepatotoxicity_risk,
+                    "alerts": alerts,
+                    "reasoning": report.toxicity.reasoning,
+                }
+                
+                return [TextContent(
+                    type="text",
+                    text=json.dumps(result, indent=2)
+                )]
+            
+            # =================================================================
+            # DRUG INTERACTION TOOLS (Phase H.3)
+            # =================================================================
+            
+            elif name == "chemagent_drug_interactions":
+                drug_a = arguments.get("drug_a", "")
+                drug_b = arguments.get("drug_b", "")
+                
+                from chemagent.tools.drugbank_client import DrugBankClient
+                
+                client = DrugBankClient()
+                report = client.check_drug_pair_interaction(drug_a, drug_b)
+                
+                result = {
+                    "drug_a": report.drug_a,
+                    "drug_b": report.drug_b,
+                    "interactions_found": report.interactions_found,
+                    "interaction_count": report.interaction_count,
+                    "severity_summary": report.severity_summary,
+                    "warnings": report.warnings,
+                    "recommendations": report.recommendations,
+                    "interactions": [
+                        {
+                            "severity": i.severity.value,
+                            "description": i.description,
+                        }
+                        for i in report.interactions
+                    ]
+                }
+                
+                return [TextContent(
+                    type="text",
+                    text=json.dumps(result, indent=2)
+                )]
+            
+            elif name == "chemagent_drug_info":
+                drug_name = arguments.get("drug_name", "")
+                
+                from chemagent.tools.drugbank_client import DrugBankClient
+                
+                client = DrugBankClient()
+                info = client.get_drug_info(drug_name)
+                
+                result = {
+                    "name": info.name,
+                    "generic_name": info.generic_name,
+                    "brand_names": info.brand_names[:5],  # Limit
+                    "rxcui": info.rxcui,
+                    "approval_status": info.approval_status.value,
+                    "indication": info.indication,
+                    "description": info.description,
+                    "known_interactions_count": len(info.known_interactions),
+                }
+                
+                return [TextContent(
+                    type="text",
+                    text=json.dumps(result, indent=2)
+                )]
+            
+            elif name == "chemagent_interaction_check":
+                drugs = arguments.get("drugs", [])
+                
+                from chemagent.tools.drugbank_client import check_drug_interactions
+                
+                summary = check_drug_interactions(drugs)
+                
+                return [TextContent(
+                    type="text",
+                    text=json.dumps(summary, indent=2)
+                )]
+            
+            # =================================================================
+            # LITERATURE SEARCH TOOLS (Phase G)
+            # =================================================================
+            
+            elif name == "chemagent_pubmed_search":
+                query = arguments.get("query", "")
+                max_results = arguments.get("max_results", 10)
+                
+                from chemagent.tools.pubmed_client import PubMedClient
+                
+                client = PubMedClient()
+                result = client.search(query, max_results=max_results)
+                
+                articles = []
+                for a in result.articles:
+                    articles.append({
+                        "pmid": a.pmid,
+                        "title": a.title,
+                        "abstract": a.abstract[:500] + "..." if a.abstract and len(a.abstract) > 500 else a.abstract,
+                        "authors": [auth.full_name for auth in a.authors[:5]],
+                        "journal": a.journal,
+                        "publication_date": a.publication_date,
+                        "doi": a.doi,
+                        "url": a.pubmed_url,
+                    })
+                
+                response = {
+                    "query": result.query,
+                    "total_count": result.total_count,
+                    "returned_count": result.returned_count,
+                    "articles": articles
+                }
+                
+                return [TextContent(
+                    type="text",
+                    text=json.dumps(response, indent=2)
+                )]
+            
+            elif name == "chemagent_compound_literature":
+                compound_name = arguments.get("compound_name", "")
+                max_results = arguments.get("max_results", 10)
+                
+                from chemagent.tools.pubmed_client import PubMedClient
+                
+                client = PubMedClient()
+                result = client.search_compound(compound_name, max_results=max_results)
+                
+                articles = []
+                for a in result.articles:
+                    articles.append({
+                        "pmid": a.pmid,
+                        "title": a.title,
+                        "abstract": a.abstract[:400] + "..." if a.abstract and len(a.abstract) > 400 else a.abstract,
+                        "citation": a.citation,
+                        "url": a.pubmed_url,
+                        "mesh_terms": a.mesh_terms[:5],
+                    })
+                
+                return [TextContent(
+                    type="text",
+                    text=json.dumps({
+                        "compound": compound_name,
+                        "total_count": result.total_count,
+                        "articles": articles
+                    }, indent=2)
+                )]
+            
+            elif name == "chemagent_target_literature":
+                target_name = arguments.get("target_name", "")
+                max_results = arguments.get("max_results", 10)
+                
+                from chemagent.tools.pubmed_client import PubMedClient
+                
+                client = PubMedClient()
+                result = client.search_target(target_name, max_results=max_results)
+                
+                articles = []
+                for a in result.articles:
+                    articles.append({
+                        "pmid": a.pmid,
+                        "title": a.title,
+                        "abstract": a.abstract[:400] + "..." if a.abstract and len(a.abstract) > 400 else a.abstract,
+                        "citation": a.citation,
+                        "url": a.pubmed_url,
+                    })
+                
+                return [TextContent(
+                    type="text",
+                    text=json.dumps({
+                        "target": target_name,
+                        "total_count": result.total_count,
+                        "articles": articles
+                    }, indent=2)
                 )]
             
             else:

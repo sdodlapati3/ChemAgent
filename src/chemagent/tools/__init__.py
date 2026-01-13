@@ -26,6 +26,12 @@ from .opentargets import (
     execute_open_targets_tool,
 )
 
+# New Phase G/H tools
+from .admet_predictor import ADMETPredictor
+from .drugbank_client import DrugBankClient, check_drug_interactions
+from .pubmed_client import PubMedClient, search_pubmed
+from .rag_pipeline import RAGPipeline, search_literature, get_augmented_context
+
 __all__ = [
     # Clients
     "ChEMBLClient",
@@ -39,4 +45,20 @@ __all__ = [
     "get_target_associations",
     "OPEN_TARGETS_TOOLS",
     "execute_open_targets_tool",
+    
+    # ADMET Prediction (Phase H)
+    "ADMETPredictor",
+    
+    # Drug Interactions (Phase H)
+    "DrugBankClient",
+    "check_drug_interactions",
+    
+    # Literature Search (Phase G)
+    "PubMedClient",
+    "search_pubmed",
+    
+    # RAG Pipeline (Phase G)
+    "RAGPipeline",
+    "search_literature",
+    "get_augmented_context",
 ]
